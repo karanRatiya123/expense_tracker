@@ -50,7 +50,7 @@ $initials = strtoupper(substr($user['name'], 0, 1));
                     <i class="fa-solid fa-house nav-ic" aria-hidden="true"></i>
                     <span class="label">Overview</span>
                 </a></li>
-                <li><a href="#">
+                <li><a href="transactions.php">
                     <i class="fa-solid fa-receipt nav-ic" aria-hidden="true"></i>
                     <span class="label">Ledger</span>
                 </a></li>

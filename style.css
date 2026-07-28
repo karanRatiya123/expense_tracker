@@ -1331,6 +1331,47 @@ input, select, textarea {
     padding-right: 22px;
 }
 
+/* Ledger search — matches .input-shell styling with a small wrapper */
+.ledger-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--line-strong);
+    padding: 10px 4px;
+    margin-bottom: 16px;
+    transition: border-color var(--transition);
+}
+
+.ledger-search:focus-within {
+    border-bottom-color: var(--tangerine);
+}
+
+.ledger-search i {
+    color: var(--muted-text);
+    font-size: 13px;
+    width: 16px;
+    text-align: center;
+}
+
+.ledger-search input[type="search"] {
+    flex: 1;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    padding: 0;
+    font-size: 15px;
+    color: var(--ink);
+    appearance: none;
+}
+
+.ledger-search input[type="search"]::placeholder { color: var(--whisper); }
+
+/* Strip the default search clear button on Webkit (looks noisy in dark UI) */
+.ledger-search input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
 .sheet .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
