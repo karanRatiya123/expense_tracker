@@ -1,0 +1,21 @@
+# Notes / planning files — never tracked
+dashboard.md
+
+# Local screenshot artifacts
+Screenshot 2026-07-28 200114.png
+*.png
+
+# PHP / runtime
+*.log
+*.bak
+*.tmp
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# XAMPP / htdocs
+*/xampp*
+/xampp/
