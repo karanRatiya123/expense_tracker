@@ -2,6 +2,8 @@
 
 A personal expense tracking dashboard built with PHP, Chart.js, and a GitHub-style contribution heatmap. Dark editorial aesthetic with Indian Rupee (₹) currency formatting.
 
+**Owner & maintainer:** [@karanRatiya123](https://github.com/karanRatiya123) — see [CONTRIBUTORS.md](CONTRIBUTORS.md).
+
 ## Features
 
 - **GitHub-style spending heatmap** — 53×7 cells covering 12 months, hover tooltips show daily outflow
