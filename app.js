@@ -586,10 +586,137 @@ function initCharts() {
     }
 }
 
+// ============================================================
+// GROUPED BAR CHART — Income vs Expense with Monthly/Yearly toggle
+// ============================================================
+
+const BAR_DATA = {
+    monthly: {
+        labels: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        income:  [650000, 720000, 680000, 800000, 820000, 850000],
+        expense: [310000, 340000, 290000, 380000, 310000, 321450]
+    },
+    yearly: {
+        labels: ['2022', '2023', '2024', '2025', '2026'],
+        income:  [6200000, 7050000, 7800000, 8650000, 9300000],
+        expense: [3450000, 3720000, 4010000, 4180000, 4320000]
+    }
+};
+
+let barChart = null;
+
+function initBarChart() {
+    const el = document.getElementById('barIncomeExpenseChart');
+    if (!el || typeof Chart === 'undefined') return;
+
+    barChart = new Chart(el, {
+        type: 'bar',
+        data: {
+            labels: BAR_DATA.monthly.labels.slice(),
+            datasets: [
+                {
+                    label: 'Income',
+                    data: BAR_DATA.monthly.income.slice(),
+                    backgroundColor: '#f59e0b',
+                    borderColor: '#0a0a0a',
+                    borderWidth: 1,
+                    borderRadius: 2,
+                    barPercentage: 0.78,
+                    categoryPercentage: 0.72
+                },
+                {
+                    label: 'Expense',
+                    data: BAR_DATA.monthly.expense.slice(),
+                    backgroundColor: '#8a8a8a',
+                    borderColor: '#0a0a0a',
+                    borderWidth: 1,
+                    borderRadius: 2,
+                    barPercentage: 0.78,
+                    categoryPercentage: 0.72
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 8,
+                        boxHeight: 8,
+                        usePointStyle: true,
+                        font: { family: "'Geist Mono', monospace", size: 11 },
+                        color: '#8a8a8a'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#1a1a1a',
+                    titleFont: { family: "'Geist Mono', monospace", size: 10 },
+                    bodyFont: { family: "'Geist Mono', monospace", size: 12 },
+                    padding: 10,
+                    borderColor: '#2a2a2a',
+                    borderWidth: 1,
+                    displayColors: false,
+                    callbacks: { label: (c) => `${c.dataset.label}: ₹${formatINR(c.parsed.y)}` }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#8a8a8a', font: { family: "'Geist Mono', monospace", size: 10 } }
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.04)', drawTicks: false },
+                    ticks: {
+                        color: '#8a8a8a',
+                        font: { family: "'Geist Mono', monospace", size: 10 },
+                        callback: (v) => {
+                            if (v >= 10000000) return '₹' + (v / 10000000).toFixed(1) + 'Cr';
+                            if (v >= 100000)   return '₹' + Math.round(v / 100000) + 'L';
+                            if (v >= 1000)      return '₹' + Math.round(v / 1000)    + 'k';
+                            return '₹' + v;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function setBarPeriod(period) {
+    if (!barChart || !BAR_DATA[period]) return;
+    const d = BAR_DATA[period];
+    barChart.data.labels = d.labels.slice();
+    barChart.data.datasets[0].data = d.income.slice();
+    barChart.data.datasets[1].data = d.expense.slice();
+    barChart.update();
+
+    const title = document.getElementById('barChartTitle');
+    if (title) {
+        title.textContent = period === 'monthly'
+            ? 'Income vs Expense · last 6 months'
+            : 'Income vs Expense · last 5 years';
+    }
+}
+
+function wireBarToggle() {
+    const buttons = document.querySelectorAll('.period-toggle button');
+    buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            buttons.forEach((b) => b.classList.remove('is-on'));
+            btn.classList.add('is-on');
+            setBarPeriod(btn.getAttribute('data-period'));
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     wireFilters();
     buildHeatmap();
     initCharts();
+    initBarChart();
+    wireBarToggle();
 
     const scrim = document.getElementById('txModal');
     if (scrim) {

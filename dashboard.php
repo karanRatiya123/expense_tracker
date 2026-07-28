@@ -255,6 +255,27 @@ $initials = strtoupper(substr($user['name'], 0, 1));
             </div>
         </section>
 
+        <!-- =================== INCOME VS EXPENSE — GROUPED BARS =================== -->
+        <section class="section" aria-label="Income vs Expense, period toggle">
+            <div class="section-head">
+                <h2><i class="fa-solid fa-chart-column section-ic" aria-hidden="true"></i> Income vs Expense.</h2>
+                <div class="period-toggle" role="tablist" aria-label="Period">
+                    <button type="button" class="is-on" data-period="monthly" role="tab">Monthly</button>
+                    <button type="button" data-period="yearly" role="tab">Yearly</button>
+                </div>
+            </div>
+
+            <div class="chart-frame panel">
+                <div class="chart-head">
+                    <h3 id="barChartTitle">Income vs Expense · last 6 months</h3>
+                    <span class="tag">Grouped</span>
+                </div>
+                <div class="chart-body" style="height:280px;">
+                    <canvas id="barIncomeExpenseChart" aria-label="Income versus expense, grouped bars"></canvas>
+                </div>
+            </div>
+        </section>
+
         <!-- =================== BUDGETS — PROGRESS BARS =================== -->
         <section class="section budgets-section" aria-label="Monthly budgets">
             <div class="section-head">
@@ -371,7 +392,7 @@ $initials = strtoupper(substr($user['name'], 0, 1));
                 <div class="section-meta">
                     <span>Real-time</span>
                     <span aria-hidden="true">·</span>
-                    <span>5 entries</span>
+                    <span>6 entries</span>
                 </div>
             </div>
 
@@ -395,6 +416,17 @@ $initials = strtoupper(substr($user['name'], 0, 1));
                 </div>
 
                 <div id="ledgerBody">
+
+                    <div class="led-grid" data-category="Food & Dining">
+                        <span class="when"><span class="day">28 Jul</span>15:45</span>
+                        <span class="col-merch"><strong>Chai Point</strong> Evening chai &amp; samosa</span>
+                        <span class="cat"><i class="fa-solid fa-utensils" aria-hidden="true"></i> Food &amp; Dining</span>
+                        <span class="method">UPI ··4182</span>
+                        <span class="amount-wrap">
+                            <span class="amount">− ₹180.00</span>
+                            <span class="balance">₹12,84,370.00</span>
+                        </span>
+                    </div>
 
                     <div class="led-grid" data-category="Food & Dining">
                         <span class="when"><span class="day">28 Jul</span>14:30</span>
