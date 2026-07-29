@@ -49,7 +49,7 @@
     function pad2(n) { return String(n).padStart(2, '0'); }
 
     // ----- Heatmap levels (KEEP IN SYNC with app.js) -----
-    const HEATMAP_LEVELS = ['#161616', '#0e2e1a', '#14532d', '#16a34a', '#22c55e'];
+    const HEATMAP_LEVELS = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];
     function levelFor(total) {
         if (total <= 0)    return 0;
         if (total < 7500)  return 1;

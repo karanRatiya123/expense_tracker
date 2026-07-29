@@ -183,18 +183,17 @@ function wireFilters() {
 // SPENDING HEATMAP — GitHub-style 12-month contribution grid
 // ============================================================
 
-const HEATMAP_LEVELS = ['#161616', '#0e2e1a', '#14532d', '#16a34a', '#22c55e'];
+// GitHub dark contribution greens
+const HEATMAP_LEVELS = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-// All 7 weekday labels (Sun → Sat) shown in the left gutter of column 0
-const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // In-memory day store: { 'YYYY-MM-DD': { total, count } }
 const heatmapData = {};
 
-// Generate the last 372 days of plausible data so the heatmap looks lived-in.
+// Generate the last ~12 months of plausible data so the heatmap looks lived-in.
 function seedHeatmapData() {
     const today = new Date(2026, 6, 28); // 28 Jul 2026 (fixed demo date)
-    const totalDays = 372;
+    const totalDays = 371; // ~53 weeks
     const start = new Date(today);
     start.setDate(start.getDate() - (totalDays - 1));
 
@@ -210,18 +209,17 @@ function seedHeatmapData() {
         d.setDate(start.getDate() + i);
         const key = isoDate(d);
 
-        // About 22% of days have zero outflows; the rest spread across 4 levels
+        // About 55% empty (like a real contribution graph), rest spread across levels
         const r = rand();
-        if (r < 0.22) {
+        if (r < 0.55) {
             heatmapData[key] = { total: 0, count: 0 };
         } else {
-            // Most days cluster around low spend; heavy days are rare
             const base = rand();
             let total, count;
-            if (base < 0.45) {
+            if (base < 0.50) {
                 total = Math.round(1500 + rand() * 6000);    // ₹1.5k – ₹7.5k
                 count = 1 + Math.floor(rand() * 2);
-            } else if (base < 0.78) {
+            } else if (base < 0.80) {
                 total = Math.round(7500 + rand() * 10000);   // ₹7.5k – ₹17.5k
                 count = 1 + Math.floor(rand() * 3);
             } else if (base < 0.94) {
@@ -263,9 +261,8 @@ function levelFor(total) {
     return 4;                       // ₹32,500+
 }
 
-// Build the heatmap DOM.
-// The grid is 53 columns (weeks) × 7 rows (weekdays). The first column may
-// be padded so the grid starts on the correct weekday.
+// Build the heatmap DOM — GitHub contribution graph layout:
+//   rows = Sun→Sat, columns = weeks, left labels = Mon / Wed / Fri only
 function buildHeatmap() {
     seedHeatmapData();
 
@@ -277,44 +274,46 @@ function buildHeatmap() {
     months.innerHTML = '';
 
     const end   = new Date(2026, 6, 28);
-    const totalDays = 372;
+    const totalDays = 371;
     const start = new Date(end);
     start.setDate(start.getDate() - (totalDays - 1));
 
-    // Walk back to the previous Sunday so the first column starts a week cleanly
-    const firstDay = new Date(start);
-    const dayOfWeek = firstDay.getDay(); // 0 = Sunday
-    const firstColumnDate = new Date(firstDay);
-    firstColumnDate.setDate(firstColumnDate.getDate() - dayOfWeek);
+    // Align first column to Sunday (GitHub default week start)
+    const firstColumnDate = new Date(start);
+    firstColumnDate.setDate(firstColumnDate.getDate() - firstColumnDate.getDay());
 
-    // Column count
-    const lastDay  = new Date(end);
-    const diffDays = Math.ceil((lastDay - firstColumnDate) / 86400000) + 1;
+    const diffDays = Math.floor((end - firstColumnDate) / 86400000) + 1;
     const cols = Math.ceil(diffDays / 7);
-
     const today = isoDate(end);
 
     const tipDateEl  = document.querySelector('#heatmapTip .tip-date');
     const tipOutEl   = document.querySelector('#heatmapTip .tip-row:nth-child(2) .tip-value');
     const tipCountEl = document.querySelector('#heatmapTip .tip-row:nth-child(3) .tip-value');
 
-    const cells = []; // for month-label positioning
-    let lastMonth = -1;
+    // Track first column index for each month (for top labels)
+    const monthAtCol = [];
 
     for (let c = 0; c < cols; c++) {
         const col = document.createElement('div');
         col.className = 'heatmap-col';
+        col.setAttribute('role', 'rowgroup');
+
+        let monthForCol = -1;
+
         for (let r = 0; r < 7; r++) {
             const cellDate = new Date(firstColumnDate);
             cellDate.setDate(firstColumnDate.getDate() + (c * 7) + r);
 
-            // Skip days before the window
+            // Out-of-range padding cells (still occupy the slot)
             if (cellDate < start || cellDate > end) {
                 const blank = document.createElement('span');
                 blank.className = 'hm-cell hm-blank';
+                blank.setAttribute('aria-hidden', 'true');
                 col.appendChild(blank);
                 continue;
             }
+
+            if (monthForCol < 0) monthForCol = cellDate.getMonth();
 
             const key   = isoDate(cellDate);
             const entry = heatmapData[key] || { total: 0, count: 0 };
@@ -324,55 +323,88 @@ function buildHeatmap() {
             cell.className = 'hm-cell';
             cell.href = 'analytics.php?date=' + encodeURIComponent(key);
             cell.style.background = HEATMAP_LEVELS[lvl];
-            cell.dataset.date   = key;
-            cell.dataset.total  = entry.total;
-            cell.dataset.count  = entry.count;
+            cell.dataset.date  = key;
+            cell.dataset.total = entry.total;
+            cell.dataset.count = entry.count;
+            cell.setAttribute('role', 'gridcell');
 
-            if (key === today) {
-                cell.classList.add('is-today');
-                cell.style.outline = '1px solid #f59e0b';
-            }
-
-            // Weekday label sits in the 28px gutter to the left of column 0,
-            // one for every row (Sun → Sat).
-            if (c === 0) {
-                cell.classList.add('has-label');
-                const lbl = document.createElement('span');
-                lbl.className = 'hm-weekday';
-                lbl.textContent = WEEKDAYS_SHORT[r];
-                cell.appendChild(lbl);
-            }
+            if (key === today) cell.classList.add('is-today');
 
             cell.addEventListener('mouseenter', (ev) => showHeatmapTip(ev.currentTarget, tipDateEl, tipOutEl, tipCountEl));
             cell.addEventListener('mouseleave', hideHeatmapTip);
             cell.addEventListener('focus',      (ev) => showHeatmapTip(ev.currentTarget, tipDateEl, tipOutEl, tipCountEl));
             cell.addEventListener('blur',       hideHeatmapTip);
-            cell.setAttribute('aria-label', `${formatLongDate(cellDate)}, ${entry.total === 0 ? 'no outflows' : '₹' + formatINR(entry.total) + ' across ' + entry.count + (entry.count === 1 ? ' entry' : ' entries')}`);
+            cell.setAttribute(
+                'aria-label',
+                `${formatLongDate(cellDate)}, ${entry.total === 0 ? 'no outflows' : '₹' + formatINR(entry.total) + ' across ' + entry.count + (entry.count === 1 ? ' entry' : ' entries')}`
+            );
 
             col.appendChild(cell);
-            cells.push({ date: cellDate, lvl });
         }
+
+        monthAtCol[c] = monthForCol;
         grid.appendChild(col);
     }
 
-    // Render month labels by detecting month-change between columns
-    let prev = -1;
-    let labelCols = []; // {month, colIndex}
-    cells.forEach(({ date }) => {
-        const m = date.getMonth();
-        if (m !== prev && date.getDate() <= 7) {
-            labelCols.push({ month: m, date });
-            prev = m;
+    // Month labels: place over the first week that contains day 1 of that month
+    // (or the first visible day of a month if the window starts mid-month)
+    const monthLabelCols = [];
+    let prevMonth = -1;
+    for (let c = 0; c < cols; c++) {
+        let labelMonth = -1;
+        for (let r = 0; r < 7; r++) {
+            const d = new Date(firstColumnDate);
+            d.setDate(firstColumnDate.getDate() + (c * 7) + r);
+            if (d < start || d > end) continue;
+            if (d.getDate() === 1) {
+                labelMonth = d.getMonth();
+                break;
+            }
         }
-    });
+        // First column of the range: show its month even if not the 1st
+        if (labelMonth < 0 && c === 0 && monthAtCol[0] >= 0) {
+            labelMonth = monthAtCol[0];
+        }
+        if (labelMonth < 0 || labelMonth === prevMonth) continue;
+        prevMonth = labelMonth;
+        monthLabelCols.push({ col: c, month: labelMonth });
+    }
 
-    labelCols.forEach(({ month, date }) => {
-        const idx = Math.floor((date - firstColumnDate) / 86400000 / 7);
+    monthLabelCols.forEach(({ col, month }) => {
         const m = document.createElement('span');
         m.className = 'heatmap-month';
-        m.style.gridColumn = `${idx + 1} / span 1`;
+        m.dataset.col = String(col);
         m.textContent = MONTH_NAMES[month];
         months.appendChild(m);
+    });
+
+    // Position labels from measured column widths (full-width flex grid)
+    positionHeatmapMonths();
+    if (!window.__heatmapMonthResizeBound) {
+        window.__heatmapMonthResizeBound = true;
+        window.addEventListener('resize', () => {
+            clearTimeout(window.__heatmapMonthResizeT);
+            window.__heatmapMonthResizeT = setTimeout(positionHeatmapMonths, 80);
+        });
+    }
+}
+
+// Align month labels to week columns after layout / resize
+function positionHeatmapMonths() {
+    const grid   = document.getElementById('heatmapGrid');
+    const months = document.getElementById('heatmapMonths');
+    if (!grid || !months) return;
+
+    const weekCols = grid.querySelectorAll('.heatmap-col');
+    if (!weekCols.length) return;
+
+    const gridLeft = grid.getBoundingClientRect().left;
+    months.querySelectorAll('.heatmap-month').forEach((label) => {
+        const idx = parseInt(label.dataset.col || '0', 10);
+        const col = weekCols[idx];
+        if (!col) return;
+        const left = col.getBoundingClientRect().left - gridLeft;
+        label.style.left = Math.max(0, left) + 'px';
     });
 }
 
@@ -399,16 +431,14 @@ function showHeatmapTip(cell, tipDateEl, tipOutEl, tipCountEl) {
     tip.setAttribute('aria-hidden', 'false');
     tip.style.opacity = '1';
 
-    // Position above the cell
+    // Position above the cell (fixed coords = viewport)
     const rect = cell.getBoundingClientRect();
     const tipRect = tip.getBoundingClientRect();
-    const scrollX = window.scrollX || window.pageXOffset;
-    const scrollY = window.scrollY || window.pageYOffset;
-    const left = rect.left + scrollX + (rect.width / 2) - (tipRect.width / 2);
-    const top  = rect.top + scrollY - tipRect.height - 10;
+    const left = rect.left + (rect.width / 2) - (tipRect.width / 2);
+    const top  = rect.top - tipRect.height - 10;
 
-    tip.style.left = Math.max(8, Math.min(left, document.documentElement.clientWidth - tipRect.width - 8)) + 'px';
-    tip.style.top  = top + 'px';
+    tip.style.left = Math.max(8, Math.min(left, window.innerWidth - tipRect.width - 8)) + 'px';
+    tip.style.top  = Math.max(8, top) + 'px';
 }
 
 function hideHeatmapTip() {

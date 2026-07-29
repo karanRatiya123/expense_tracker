@@ -1451,55 +1451,115 @@ input, select, textarea {
 }
 
 /* ==========================================================================
-   Spending Heatmap (GitHub-style)
+   Spending Heatmap (GitHub-style contribution graph)
+   Full-width horizontal grid · Mon/Wed/Fri on left · week columns of 7 days
    ========================================================================== */
 
+.heatmap-section {
+    width: 100%;
+}
+
 .heatmap {
+    --hm-gap: 4px;
+    --hm-days-w: 40px;
+    --hm-radius: 3px;
+    width: 100%;
     border: var(--hairline);
-    padding: 24px 24px 18px;
+    padding: 28px 28px 20px;
     overflow-x: auto;
     background: var(--paper-card);
     position: relative;
 }
 
+.heatmap-graph {
+    display: block;
+    width: 100%;
+    min-width: 720px; /* keeps cells readable on very narrow viewports */
+}
+
+/* Month labels row — offset by day-label gutter so they sit over the grid */
 .heatmap-months {
-    display: grid;
-    grid-template-columns: 28px repeat(53, 1fr);
-    grid-auto-rows: 16px;
-    gap: 3px;
-    margin-bottom: 6px;
+    display: block;
+    position: relative;
+    height: 22px;
+    margin-left: var(--hm-days-w);
+    margin-bottom: 8px;
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 12px;
     color: var(--muted-text);
-    letter-spacing: 0.04em;
-    min-width: 760px;
+    letter-spacing: 0.02em;
 }
 
 .heatmap-month {
-    grid-column: 1 / span 1;
+    position: absolute;
+    top: 0;
+    left: 0;
     white-space: nowrap;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* Body: day labels + week columns stretch full width */
+.heatmap-body {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+}
+
+.heatmap-days {
+    display: flex;
+    flex-direction: column;
+    gap: var(--hm-gap);
+    width: var(--hm-days-w);
+    flex-shrink: 0;
+    padding-right: 10px;
+    box-sizing: border-box;
+    align-self: stretch;
+}
+
+.hm-day {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1 1 0;
+    min-height: 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1;
+    color: var(--muted-text);
+    letter-spacing: 0.01em;
+    user-select: none;
 }
 
 .heatmap-grid {
-    display: grid;
-    grid-template-columns: 34px repeat(53, 1fr);
-    grid-auto-rows: 14px;
-    gap: 3px;
-    min-width: 760px;
+    display: flex;
+    gap: var(--hm-gap);
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
 }
 
 .heatmap-col {
-    display: contents;
+    display: flex;
+    flex-direction: column;
+    gap: var(--hm-gap);
+    flex: 1 1 0;
+    min-width: 12px; /* keeps cells chunky even with many weeks */
 }
 
 .hm-cell {
     display: block;
     width: 100%;
-    height: 14px;
-    border-radius: 3px;
-    background: var(--mist);
+    aspect-ratio: 1 / 1;
+    height: auto;
+    flex: 0 0 auto;
+    border-radius: var(--hm-radius);
+    background: #161b22;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.06);
     position: relative;
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    transition: outline-color 0.1s ease, transform 0.1s ease, box-shadow 0.1s ease;
     cursor: pointer;
     outline: none;
     text-decoration: none;
@@ -1508,39 +1568,30 @@ input, select, textarea {
 
 .hm-cell:hover,
 .hm-cell:focus-visible {
-    transform: scale(1.45);
-    box-shadow: 0 0 0 1px var(--tangerine), 0 8px 18px rgba(0, 0, 0, 0.5);
+    outline: 2px solid rgba(255, 255, 255, 0.65);
+    outline-offset: 1px;
     z-index: 4;
+    transform: scale(1.2);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 
 .hm-blank {
     background: transparent !important;
+    border-color: transparent !important;
     cursor: default;
     pointer-events: none;
+    visibility: hidden;
 }
 
 .hm-blank:hover {
+    outline: none;
     transform: none;
     box-shadow: none;
 }
 
-.hm-cell .hm-weekday {
-    position: absolute;
-    left: -34px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 30px;
-    text-align: right;
-    font-family: var(--mono);
-    font-size: 8px;
-    letter-spacing: 0.04em;
-    color: var(--muted-text);
-    text-transform: uppercase;
-    pointer-events: none;
-}
-
 .hm-cell.is-today {
-    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.4);
+    outline: 2px solid rgba(245, 158, 11, 0.65);
+    outline-offset: 0;
 }
 
 /* Footer row */
@@ -1557,7 +1608,7 @@ input, select, textarea {
 
 .heatmap-link {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted-text);
     display: inline-flex;
     align-items: center;
@@ -1572,26 +1623,31 @@ input, select, textarea {
     align-items: center;
     gap: 4px;
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 12px;
     color: var(--muted-text);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-left: auto;
 }
 
-.heatmap-legend .legend-label { padding: 0 6px; }
+.heatmap-legend .legend-label {
+    padding: 0 6px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12px;
+}
 
 .heatmap-legend .legend-cell {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    width: 14px;
+    height: 14px;
+    border-radius: var(--hm-radius);
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.heatmap-legend .legend-cell[data-level="0"] { background: #161616; }
-.heatmap-legend .legend-cell[data-level="1"] { background: #0e2e1a; }
-.heatmap-legend .legend-cell[data-level="2"] { background: #14532d; }
-.heatmap-legend .legend-cell[data-level="3"] { background: #16a34a; }
-.heatmap-legend .legend-cell[data-level="4"] { background: #22c55e; }
+.heatmap-legend .legend-cell[data-level="0"] { background: #161b22; }
+.heatmap-legend .legend-cell[data-level="1"] { background: #0e4429; }
+.heatmap-legend .legend-cell[data-level="2"] { background: #006d32; }
+.heatmap-legend .legend-cell[data-level="3"] { background: #26a641; }
+.heatmap-legend .legend-cell[data-level="4"] { background: #39d353; }
 
 /* Clickable heatmap wrapper (→ analytics) */
 .heatmap-click {
@@ -1617,7 +1673,7 @@ input, select, textarea {
 
 /* Hover tooltip */
 .heatmap-tip {
-    position: absolute;
+    position: fixed;
     background: #0a0a0a;
     border: 1px solid var(--line-strong);
     border-radius: 8px;

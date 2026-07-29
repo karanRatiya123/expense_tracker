@@ -183,14 +183,28 @@ $activePage = 'overview';
                 <div class="section-meta">
                     <span>Last 12 months</span>
                     <span aria-hidden="true">·</span>
-                    <span>372 days</span>
+                    <span>53 weeks</span>
                 </div>
             </div>
 
             <div class="heatmap">
-                <div class="heatmap-months" id="heatmapMonths" aria-hidden="true"></div>
-                <div class="heatmap-grid" id="heatmapGrid"></div>
+                <div class="heatmap-graph">
+                    <div class="heatmap-months" id="heatmapMonths" aria-hidden="true"></div>
+                    <div class="heatmap-body">
+                        <div class="heatmap-days" id="heatmapDays" aria-hidden="true">
+                            <span class="hm-day" data-dow="0"></span>
+                            <span class="hm-day" data-dow="1">Mon</span>
+                            <span class="hm-day" data-dow="2"></span>
+                            <span class="hm-day" data-dow="3">Wed</span>
+                            <span class="hm-day" data-dow="4"></span>
+                            <span class="hm-day" data-dow="5">Fri</span>
+                            <span class="hm-day" data-dow="6"></span>
+                        </div>
+                        <div class="heatmap-grid" id="heatmapGrid" role="grid" aria-label="Spending by day"></div>
+                    </div>
+                </div>
                 <div class="heatmap-foot">
+                    <span class="heatmap-link">How spending intensity is counted</span>
                     <div class="heatmap-legend">
                         <span class="legend-label">Less</span>
                         <span class="legend-cell" data-level="0"></span>
