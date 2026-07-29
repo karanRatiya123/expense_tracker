@@ -11,6 +11,7 @@ if (!isset($_SESSION['user'])) {
 
 $user = $_SESSION['user'];
 $initials = strtoupper(substr($user['name'], 0, 1));
+$activePage = 'overview';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -46,23 +47,23 @@ $initials = strtoupper(substr($user['name'], 0, 1));
             </div>
 
             <ul class="nav" role="navigation">
-                <li><a href="#" class="is-active">
+                <li><a href="dashboard.php" class="<?php echo $activePage==='overview' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-house nav-ic" aria-hidden="true"></i>
                     <span class="label">Overview</span>
                 </a></li>
-                <li><a href="transactions.php">
+                <li><a href="transactions.php" class="<?php echo $activePage==='ledger' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-receipt nav-ic" aria-hidden="true"></i>
                     <span class="label">Ledger</span>
                 </a></li>
-                <li><a href="#">
+                <li><a href="analytics.php" class="<?php echo $activePage==='analytics' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-chart-pie nav-ic" aria-hidden="true"></i>
                     <span class="label">Analytics</span>
                 </a></li>
-                <li><a href="#">
+                <li><a href="#" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-bullseye nav-ic" aria-hidden="true"></i>
                     <span class="label">Budgets</span>
                 </a></li>
-                <li><a href="#">
+                <li><a href="#" class="<?php echo $activePage==='settings' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-gear nav-ic" aria-hidden="true"></i>
                     <span class="label">Settings</span>
                 </a></li>
@@ -190,10 +191,6 @@ $initials = strtoupper(substr($user['name'], 0, 1));
                 <div class="heatmap-months" id="heatmapMonths" aria-hidden="true"></div>
                 <div class="heatmap-grid" id="heatmapGrid"></div>
                 <div class="heatmap-foot">
-                    <a href="#" class="heatmap-link" onclick="event.preventDefault(); showToast('Each cell is one day. Color intensity reflects total outflow that day.', 'info')">
-                        <i class="fa-regular fa-circle-question" aria-hidden="true"></i>
-                        How we count days
-                    </a>
                     <div class="heatmap-legend">
                         <span class="legend-label">Less</span>
                         <span class="legend-cell" data-level="0"></span>

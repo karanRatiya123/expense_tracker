@@ -11,6 +11,7 @@ if (!isset($_SESSION['user'])) {
 
 $user = $_SESSION['user'];
 $initials = strtoupper(substr($user['name'], 0, 1));
+$activePage = 'ledger';
 
 // ---- Format helpers ----
 function format_inr($n) {
@@ -117,23 +118,23 @@ $categories = array_keys($categories);
             </div>
 
             <ul class="nav" role="navigation">
-                <li><a href="dashboard.php">
+                <li><a href="dashboard.php" class="<?php echo $activePage==='overview' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-house nav-ic" aria-hidden="true"></i>
                     <span class="label">Overview</span>
                 </a></li>
-                <li><a href="transactions.php" class="is-active">
+                <li><a href="transactions.php" class="<?php echo $activePage==='ledger' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-receipt nav-ic" aria-hidden="true"></i>
                     <span class="label">Ledger</span>
                 </a></li>
-                <li><a href="#">
+                <li><a href="analytics.php" class="<?php echo $activePage==='analytics' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-chart-pie nav-ic" aria-hidden="true"></i>
                     <span class="label">Analytics</span>
                 </a></li>
-                <li><a href="#">
+                <li><a href="#" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-bullseye nav-ic" aria-hidden="true"></i>
                     <span class="label">Budgets</span>
                 </a></li>
-                <li><a href="#">
+                <li><a href="#" class="<?php echo $activePage==='settings' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-gear nav-ic" aria-hidden="true"></i>
                     <span class="label">Settings</span>
                 </a></li>

@@ -185,7 +185,8 @@ function wireFilters() {
 
 const HEATMAP_LEVELS = ['#161616', '#0e2e1a', '#14532d', '#16a34a', '#22c55e'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const WEEKDAYS_SHORT = ['', 'Mon', '', 'Wed', '', 'Fri', '']; // render Mon / Wed / Fri like GitHub
+// All 7 weekday labels (Sun → Sat) shown in the left gutter of column 0
+const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // In-memory day store: { 'YYYY-MM-DD': { total, count } }
 const heatmapData = {};
@@ -319,8 +320,9 @@ function buildHeatmap() {
             const entry = heatmapData[key] || { total: 0, count: 0 };
             const lvl   = entry.total === 0 ? 0 : levelFor(entry.total);
 
-            const cell = document.createElement('span');
+            const cell = document.createElement('a');
             cell.className = 'hm-cell';
+            cell.href = 'analytics.php?date=' + encodeURIComponent(key);
             cell.style.background = HEATMAP_LEVELS[lvl];
             cell.dataset.date   = key;
             cell.dataset.total  = entry.total;
@@ -331,8 +333,9 @@ function buildHeatmap() {
                 cell.style.outline = '1px solid #f59e0b';
             }
 
-            // Weekday label cell on the left of the first column for rows 1,3,5
-            if (c === 0 && (r === 1 || r === 3 || r === 5)) {
+            // Weekday label sits in the 28px gutter to the left of column 0,
+            // one for every row (Sun → Sat).
+            if (c === 0) {
                 cell.classList.add('has-label');
                 const lbl = document.createElement('span');
                 lbl.className = 'hm-weekday';
@@ -344,7 +347,6 @@ function buildHeatmap() {
             cell.addEventListener('mouseleave', hideHeatmapTip);
             cell.addEventListener('focus',      (ev) => showHeatmapTip(ev.currentTarget, tipDateEl, tipOutEl, tipCountEl));
             cell.addEventListener('blur',       hideHeatmapTip);
-            cell.tabIndex = 0;
             cell.setAttribute('aria-label', `${formatLongDate(cellDate)}, ${entry.total === 0 ? 'no outflows' : '₹' + formatINR(entry.total) + ' across ' + entry.count + (entry.count === 1 ? ' entry' : ' entries')}`);
 
             col.appendChild(cell);
