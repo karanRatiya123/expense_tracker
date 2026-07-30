@@ -130,7 +130,7 @@ $categories = array_keys($categories);
                     <i class="fa-solid fa-chart-pie nav-ic" aria-hidden="true"></i>
                     <span class="label">Analytics</span>
                 </a></li>
-                <li><a href="#" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
+                <li><a href="budgets.php" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-bullseye nav-ic" aria-hidden="true"></i>
                     <span class="label">Budgets</span>
                 </a></li>

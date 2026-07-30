@@ -59,7 +59,7 @@ $activePage = 'overview';
                     <i class="fa-solid fa-chart-pie nav-ic" aria-hidden="true"></i>
                     <span class="label">Analytics</span>
                 </a></li>
-                <li><a href="#" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
+                <li><a href="budgets.php" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-bullseye nav-ic" aria-hidden="true"></i>
                     <span class="label">Budgets</span>
                 </a></li>
@@ -295,6 +295,8 @@ $activePage = 'overview';
                     <span>July</span>
                     <span aria-hidden="true">·</span>
                     <span>Auto-rolling</span>
+                    <span aria-hidden="true">·</span>
+                    <a href="budgets.php" class="manage-link">Manage →</a>
                 </div>
             </div>
 
