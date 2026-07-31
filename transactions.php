@@ -2,11 +2,8 @@
 require_once 'config.php';
 
 if (!isset($_SESSION['user'])) {
-    $_SESSION['user'] = [
-        'id' => 1,
-        'name' => 'Alex Morgan',
-        'email' => 'alex.morgan@apexspend.com'
-    ];
+    header('Location: login.php');
+    exit;
 }
 
 $user = $_SESSION['user'];
@@ -134,17 +131,17 @@ $categories = array_keys($categories);
                     <i class="fa-solid fa-bullseye nav-ic" aria-hidden="true"></i>
                     <span class="label">Budgets</span>
                 </a></li>
-                <li><a href="#" class="<?php echo $activePage==='settings' ? 'is-active' : ''; ?>">
-                    <i class="fa-solid fa-gear nav-ic" aria-hidden="true"></i>
-                    <span class="label">Settings</span>
+                <li><a href="profile.php" class="<?php echo $activePage==='settings' || $activePage==='profile' ? 'is-active' : ''; ?>">
+                    <i class="fa-solid fa-user nav-ic" aria-hidden="true"></i>
+                    <span class="label">Profile</span>
                 </a></li>
             </ul>
         </div>
 
         <div class="who">
-            <div class="avatar"><?php echo htmlspecialchars($initials); ?></div>
+            <a href="profile.php" class="avatar" aria-label="Open profile"><?php echo htmlspecialchars($initials); ?></a>
             <div class="who-meta">
-                <strong><?php echo htmlspecialchars($user['name']); ?></strong>
+                <strong><a href="profile.php"><?php echo htmlspecialchars($user['name']); ?></a></strong>
                 <span><?php echo htmlspecialchars($user['email']); ?></span>
             </div>
             <button type="button" class="logout" onclick="window.location.href='logout.php'" aria-label="Sign out">

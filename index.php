@@ -1,7 +1,4 @@
 <?php
 require_once 'config.php';
-
-// Auto-route to the dashboard — login page has been removed.
-header('Location: dashboard.php');
+header('Location: ' . (isset($_SESSION['user']) ? 'dashboard.php' : 'login.php'));
 exit;
-?>
