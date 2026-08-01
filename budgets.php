@@ -40,7 +40,7 @@ $payload = [
         'Income'              => 'fa-money-bill-wave',
         'Health & Medical'    => 'fa-briefcase-medical',
     ],
-    'demoDate' => '2026-07-28',
+    'demoDate' => date('Y-m-d'),
 ];
 
 $jsonPayload = json_encode(

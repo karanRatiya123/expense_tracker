@@ -408,12 +408,79 @@ function updateHeatmapDay(dateObj, addedAmount) {
 
 // ----- Charts Initialization -----
 
+function getCategoryData() {
+    let cats = { 'Food & Dining': 0, 'Housing & Utilities': 0, 'Shopping & Retail': 0, 'Transportation': 0, 'Entertainment': 0, 'Other': 0 };
+    if (typeof serverTransactions !== 'undefined' && Array.isArray(serverTransactions)) {
+        serverTransactions.forEach(t => {
+            if (t.type === 'expense') {
+                let cat = t.category;
+                if (cats[cat] !== undefined) cats[cat] += parseFloat(t.amount);
+                else if (cat === 'Shopping') cats['Shopping & Retail'] += parseFloat(t.amount);
+                else if (cat === 'Transport') cats['Transportation'] += parseFloat(t.amount);
+                else cats['Other'] += parseFloat(t.amount);
+            }
+        });
+    }
+    return [cats['Food & Dining'], cats['Housing & Utilities'], cats['Shopping & Retail'], cats['Transportation'], cats['Entertainment'], cats['Other']];
+}
+
+function getMonthlyData() {
+    const labels = [];
+    const income = [0, 0, 0, 0, 0, 0];
+    const expense = [0, 0, 0, 0, 0, 0];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        labels.push(d.toLocaleString('default', { month: 'short' }));
+    }
+    if (typeof serverTransactions !== 'undefined' && Array.isArray(serverTransactions)) {
+        serverTransactions.forEach(t => {
+            const d = new Date(t.date.replace(' ', 'T'));
+            if (isNaN(d.getTime())) return;
+            const monthsDiff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+            if (monthsDiff >= 0 && monthsDiff < 6) {
+                const index = 5 - monthsDiff;
+                const amt = parseFloat(t.amount);
+                if (t.type === 'income') income[index] += amt;
+                else expense[index] += amt;
+            }
+        });
+    }
+    return { labels, income, expense };
+}
+
+function getYearlyData() {
+    const labels = [];
+    const income = [0, 0, 0, 0, 0];
+    const expense = [0, 0, 0, 0, 0];
+    const currentYear = new Date().getFullYear();
+    for (let i = 4; i >= 0; i--) {
+        labels.push(String(currentYear - i));
+    }
+    if (typeof serverTransactions !== 'undefined' && Array.isArray(serverTransactions)) {
+        serverTransactions.forEach(t => {
+            const d = new Date(t.date.replace(' ', 'T'));
+            if (isNaN(d.getTime())) return;
+            const yearDiff = currentYear - d.getFullYear();
+            if (yearDiff >= 0 && yearDiff < 5) {
+                const index = 4 - yearDiff;
+                const amt = parseFloat(t.amount);
+                if (t.type === 'income') income[index] += amt;
+                else expense[index] += amt;
+            }
+        });
+    }
+    return { labels, income, expense };
+}
+
 function initCharts() {
     if (typeof Chart === 'undefined') return;
 
     Chart.defaults.font.family = "'Geist Mono', ui-monospace, monospace";
     Chart.defaults.font.size = 11;
     Chart.defaults.color = '#8a8a8a';
+
+    const monthlyData = getMonthlyData();
 
     const lineCtx = document.getElementById('incomeExpenseChart');
     if (lineCtx) {
@@ -430,11 +497,11 @@ function initCharts() {
         new Chart(lineCtx, {
             type: 'line',
             data: {
-                labels: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                labels: monthlyData.labels,
                 datasets: [
                     {
                         label: 'Income',
-                        data: [650000, 720000, 680000, 800000, 820000, 850000],
+                        data: monthlyData.income,
                         borderColor: '#f59e0b',
                         backgroundColor: grad1,
                         borderWidth: 2,
@@ -447,7 +514,7 @@ function initCharts() {
                     },
                     {
                         label: 'Expense',
-                        data: [310000, 340000, 290000, 380000, 310000, 321450],
+                        data: monthlyData.expense,
                         borderColor: '#8a8a8a',
                         backgroundColor: grad2,
                         borderWidth: 2,
@@ -512,7 +579,7 @@ function initCharts() {
             data: {
                 labels: ['Food & Dining', 'Housing & Utilities', 'Shopping', 'Transport', 'Entertainment', 'Other'],
                 datasets: [{
-                    data: [120000, 95000, 45000, 35000, 20000, 6450],
+                    data: getCategoryData(),
                     backgroundColor: [
                         '#f5f5f5',
                         '#f59e0b',
@@ -565,16 +632,19 @@ function initCharts() {
 // GROUPED BAR CHART — Income vs Expense with Monthly/Yearly toggle
 // ============================================================
 
+const monthlyData = getMonthlyData();
+const yearlyData = getYearlyData();
+
 const BAR_DATA = {
     monthly: {
-        labels: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-        income:  [650000, 720000, 680000, 800000, 820000, 850000],
-        expense: [310000, 340000, 290000, 380000, 310000, 321450]
+        labels: monthlyData.labels,
+        income:  monthlyData.income,
+        expense: monthlyData.expense
     },
     yearly: {
-        labels: ['2022', '2023', '2024', '2025', '2026'],
-        income:  [6200000, 7050000, 7800000, 8650000, 9300000],
-        expense: [3450000, 3720000, 4010000, 4180000, 4320000]
+        labels: yearlyData.labels,
+        income:  yearlyData.income,
+        expense: yearlyData.expense
     }
 };
 
@@ -686,12 +756,79 @@ function wireBarToggle() {
     });
 }
 
+function renderDashboardBudgets() {
+    const grid = document.getElementById('dashboardBudgetsGrid');
+    if (!grid) return;
+
+    let store;
+    try {
+        store = JSON.parse(localStorage.getItem('apexspend.budgets.v1') || 'null');
+    } catch (e) { store = null; }
+    
+    if (!store || !store.items || store.items.length === 0) {
+        grid.innerHTML = '<p style="padding:20px;color:var(--whisper);">No budgets set. <a href="budgets.php" style="color:var(--foreground);">Create one →</a></p>';
+        return;
+    }
+
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const cards = [];
+
+    const displayBudgets = store.items.slice(0, 5);
+
+    displayBudgets.forEach(b => {
+        let spent = 0;
+        if (typeof serverTransactions !== 'undefined') {
+            serverTransactions.forEach(t => {
+                if (t.type === 'expense' && t.category === b.category) {
+                    const d = new Date(t.date.replace(' ', 'T'));
+                    if (!isNaN(d.getTime()) && d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                        spent += parseFloat(t.amount);
+                    }
+                }
+            });
+        }
+
+        const pct = b.amount > 0 ? (spent / b.amount) * 100 : 0;
+        const displayPct = Math.min(100, pct);
+        const over = spent > b.amount;
+        const fillCls = over ? 'warn' : '';
+        const labelCls = over ? 'warn' : '';
+        const icon = categoryIcon(b.category);
+
+        cards.push(`
+            <div class="budget">
+                <div class="budget-head">
+                    <div class="budget-cat">
+                        <i class="fa-solid ${icon}" aria-hidden="true"></i>
+                        <span>${escapeHtml(b.category)}</span>
+                    </div>
+                    <div class="budget-figures">
+                        <span class="budget-spent">₹${formatINR(spent)}</span>
+                        <span class="budget-of">of ₹${formatINR(b.amount)}</span>
+                    </div>
+                </div>
+                <div class="progress large">
+                    <div class="progress-track">
+                        <div class="progress-fill ${fillCls}" style="--w: ${displayPct.toFixed(1)}%"></div>
+                    </div>
+                    <span class="progress-label ${labelCls}">${pct.toFixed(0)}% ${over ? '· over budget' : 'used'}</span>
+                </div>
+            </div>
+        `);
+    });
+
+    grid.innerHTML = cards.join('');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     wireFilters();
     buildHeatmap();
     initCharts();
     initBarChart();
     wireBarToggle();
+    renderDashboardBudgets();
 
     const scrim = document.getElementById('txModal');
     if (scrim) {

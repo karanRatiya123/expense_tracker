@@ -15,13 +15,49 @@ $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY dat
 $stmt->execute([$user['id']]);
 $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$total_in  = 0;
+$current_month = date('m');
+$current_year = date('Y');
+$last_month = date('m', strtotime('-1 month'));
+$last_month_year = date('Y', strtotime('-1 month'));
+
+$income_this_month = 0;
+$outflows_this_month = 0;
+$income_last_month = 0;
+$outflows_last_month = 0;
+
+$total_in = 0;
 $total_out = 0;
+
 foreach ($transactions as $t) {
+    $t_time = strtotime($t['date']);
+    $t_month = date('m', $t_time);
+    $t_year = date('Y', $t_time);
+
     if ($t['type'] === 'income') $total_in += $t['amount'];
     else $total_out += $t['amount'];
+
+    if ($t_month == $current_month && $t_year == $current_year) {
+        if ($t['type'] === 'income') $income_this_month += $t['amount'];
+        else $outflows_this_month += $t['amount'];
+    }
+    
+    if ($t_month == $last_month && $t_year == $last_month_year) {
+        if ($t['type'] === 'income') $income_last_month += $t['amount'];
+        else $outflows_last_month += $t['amount'];
+    }
 }
 $net = $total_in - $total_out;
+
+$income_trend = $income_last_month > 0 ? (($income_this_month - $income_last_month) / $income_last_month) * 100 : ($income_this_month > 0 ? 100 : 0);
+$outflows_trend = $outflows_last_month > 0 ? (($outflows_this_month - $outflows_last_month) / $outflows_last_month) * 100 : ($outflows_this_month > 0 ? 100 : 0);
+
+$saved_this_month = $income_this_month - $outflows_this_month;
+$savings_goal = 50000;
+$savings_progress = min(100, max(0, ($saved_this_month / $savings_goal) * 100));
+
+$run_rate_annual = $income_this_month * 12;
+$run_rate_target = 1000000;
+$run_rate_progress = min(100, max(0, ($run_rate_annual / $run_rate_target) * 100));
 
 function format_inr($n) {
     return number_format((float)$n, 2, '.', ',');
@@ -149,9 +185,9 @@ function category_icon($cat) {
         <section class="kpi" aria-label="Key figures">
             <div class="cell">
                 <div class="cell-num">01</div>
-                <div class="label">Income, July</div>
-                <div class="figure"><span class="currency">₹</span><span id="totalIncome"><?php echo format_inr($total_in); ?></span></div>
-                <div class="meta"><span class="trend up">▲ 6.2%</span><span>vs. June</span></div>
+                <div class="label">Income, <?php echo date('M'); ?></div>
+                <div class="figure"><span class="currency">₹</span><span id="totalIncome"><?php echo format_inr($income_this_month); ?></span></div>
+                <div class="meta"><span class="trend <?php echo $income_trend >= 0 ? 'up' : 'down'; ?>"><?php echo $income_trend >= 0 ? '▲' : '▼'; ?> <?php echo number_format(abs($income_trend), 1); ?>%</span><span>vs. <?php echo date('M', strtotime('-1 month')); ?></span></div>
                 <!-- Mini bar chart: income by month -->
                 <div class="spark" aria-hidden="true">
                     <span class="bar" style="--h: 60%"></span>
@@ -164,9 +200,9 @@ function category_icon($cat) {
             </div>
             <div class="cell">
                 <div class="cell-num">02</div>
-                <div class="label">Outflows, July</div>
-                <div class="figure"><span class="currency">₹</span><span id="totalExpenses"><?php echo format_inr($total_out); ?></span></div>
-                <div class="meta"><span class="trend down">▼ 3.7%</span><span>vs. June</span></div>
+                <div class="label">Outflows, <?php echo date('M'); ?></div>
+                <div class="figure"><span class="currency">₹</span><span id="totalExpenses"><?php echo format_inr($outflows_this_month); ?></span></div>
+                <div class="meta"><span class="trend <?php echo $outflows_trend <= 0 ? 'up' : 'down'; ?>"><?php echo $outflows_trend >= 0 ? '▲' : '▼'; ?> <?php echo number_format(abs($outflows_trend), 1); ?>%</span><span>vs. <?php echo date('M', strtotime('-1 month')); ?></span></div>
                 <div class="spark" aria-hidden="true">
                     <span class="bar alt" style="--h: 72%"></span>
                     <span class="bar alt" style="--h: 80%"></span>
@@ -179,26 +215,26 @@ function category_icon($cat) {
             <div class="cell">
                 <div class="cell-num">03</div>
                 <div class="label">Saved this month</div>
-                <div class="figure"><span class="currency">₹</span><span id="totalSavings">5,28,550.00</span></div>
-                <div class="meta"><span class="trend up">▲ 84%</span><span>of goal</span></div>
+                <div class="figure"><span class="currency">₹</span><span id="totalSavings"><?php echo format_inr($saved_this_month); ?></span></div>
+                <div class="meta"><span class="trend <?php echo $saved_this_month >= 0 ? 'up' : 'down'; ?>"><?php echo number_format($savings_progress, 0); ?>%</span><span>of goal</span></div>
                 <!-- Progress bar -->
                 <div class="progress" aria-label="Progress to savings goal">
                     <div class="progress-track">
-                        <div class="progress-fill" style="--w: 84%"></div>
+                        <div class="progress-fill" style="--w: <?php echo $savings_progress; ?>%"></div>
                     </div>
-                    <span class="progress-label">84% of ₹6,30,000 goal</span>
+                    <span class="progress-label"><?php echo number_format($savings_progress, 0); ?>% of ₹<?php echo format_inr($savings_goal); ?> goal</span>
                 </div>
             </div>
             <div class="cell">
                 <div class="cell-num">04</div>
                 <div class="label">Run-rate, annual</div>
-                <div class="figure"><span class="currency">₹</span><span>63,42,600.00</span></div>
-                <div class="meta"><span class="trend up">▲ 9.1%</span><span>projection</span></div>
+                <div class="figure"><span class="currency">₹</span><span><?php echo format_inr($run_rate_annual); ?></span></div>
+                <div class="meta"><span class="trend <?php echo $run_rate_progress >= 100 ? 'up' : 'down'; ?>"><?php echo number_format($run_rate_progress, 1); ?>%</span><span>projection</span></div>
                 <div class="progress" aria-label="Progress to annual target">
                     <div class="progress-track">
-                        <div class="progress-fill alt" style="--w: 58%"></div>
+                        <div class="progress-fill alt" style="--w: <?php echo $run_rate_progress; ?>%"></div>
                     </div>
-                    <span class="progress-label">58% of ₹1.1 Cr target</span>
+                    <span class="progress-label"><?php echo number_format($run_rate_progress, 0); ?>% of ₹<?php echo format_inr($run_rate_target); ?> target</span>
                 </div>
             </div>
         </section>
@@ -327,102 +363,7 @@ function category_icon($cat) {
                 </div>
             </div>
 
-            <div class="budgets">
-                <div class="budget">
-                    <div class="budget-head">
-                        <div class="budget-cat">
-                            <i class="fa-solid fa-utensils" aria-hidden="true"></i>
-                            <span>Food &amp; Dining</span>
-                        </div>
-                        <div class="budget-figures">
-                            <span class="budget-spent">₹12,000.00</span>
-                            <span class="budget-of">of ₹15,000.00</span>
-                        </div>
-                    </div>
-                    <div class="progress large">
-                        <div class="progress-track">
-                            <div class="progress-fill" style="--w: 80%"></div>
-                        </div>
-                        <span class="progress-label">80% used</span>
-                    </div>
-                </div>
-
-                <div class="budget">
-                    <div class="budget-head">
-                        <div class="budget-cat">
-                            <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-                            <span>Housing &amp; Utilities</span>
-                        </div>
-                        <div class="budget-figures">
-                            <span class="budget-spent">₹17,800.00</span>
-                            <span class="budget-of">of ₹22,500.00</span>
-                        </div>
-                    </div>
-                    <div class="progress large">
-                        <div class="progress-track">
-                            <div class="progress-fill" style="--w: 79%"></div>
-                        </div>
-                        <span class="progress-label">79% used</span>
-                    </div>
-                </div>
-
-                <div class="budget">
-                    <div class="budget-head">
-                        <div class="budget-cat">
-                            <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
-                            <span>Shopping &amp; Retail</span>
-                        </div>
-                        <div class="budget-figures">
-                            <span class="budget-spent">₹9,000.00</span>
-                            <span class="budget-of">of ₹8,000.00</span>
-                        </div>
-                    </div>
-                    <div class="progress large">
-                        <div class="progress-track">
-                            <div class="progress-fill warn" style="--w: 100%"></div>
-                        </div>
-                        <span class="progress-label warn">112% · over budget</span>
-                    </div>
-                </div>
-
-                <div class="budget">
-                    <div class="budget-head">
-                        <div class="budget-cat">
-                            <i class="fa-solid fa-car" aria-hidden="true"></i>
-                            <span>Transportation</span>
-                        </div>
-                        <div class="budget-figures">
-                            <span class="budget-spent">₹4,200.00</span>
-                            <span class="budget-of">of ₹6,000.00</span>
-                        </div>
-                    </div>
-                    <div class="progress large">
-                        <div class="progress-track">
-                            <div class="progress-fill" style="--w: 70%"></div>
-                        </div>
-                        <span class="progress-label">70% used</span>
-                    </div>
-                </div>
-
-                <div class="budget">
-                    <div class="budget-head">
-                        <div class="budget-cat">
-                            <i class="fa-solid fa-film" aria-hidden="true"></i>
-                            <span>Entertainment</span>
-                        </div>
-                        <div class="budget-figures">
-                            <span class="budget-spent">₹2,000.00</span>
-                            <span class="budget-of">of ₹3,000.00</span>
-                        </div>
-                    </div>
-                    <div class="progress large">
-                        <div class="progress-track">
-                            <div class="progress-fill" style="--w: 67%"></div>
-                        </div>
-                        <span class="progress-label">67% used</span>
-                    </div>
-                </div>
-            </div>
+            <div class="budgets" id="dashboardBudgetsGrid"></div>
         </section>
 
         <!-- =================== LEDGER — THE SIGNATURE =================== -->

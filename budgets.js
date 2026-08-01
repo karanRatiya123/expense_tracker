@@ -219,7 +219,7 @@
     for (const t of DATA.transactions) {
       if (t.type !== 'expense') continue;
       if (t.category !== b.category) continue;
-      const d = new Date(t.date);
+      const d = new Date(t.date.replace(' ', 'T'));
       if (d < range.start || d > range.end) continue;
       total += t.amount;
     }
