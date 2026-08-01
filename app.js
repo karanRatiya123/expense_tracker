@@ -61,66 +61,44 @@ function showToast(message, type = 'info') {
 }
 
 // ----- Add Transaction Handler -----
-function handleAddTransaction(e) {
+async function handleAddTransaction(e) {
     e.preventDefault();
     const title    = document.getElementById('txTitle').value.trim();
     const amount   = parseFloat(document.getElementById('txAmount').value);
     const category = document.getElementById('txCategory').value;
     const method   = document.getElementById('txMethod').value;
+    const type     = currentType;
+    const isExp    = currentType === 'expense';
 
     if (!title || isNaN(amount) || amount <= 0) {
         showToast('Enter a valid title and a positive amount.', 'error');
         return;
     }
 
-    const isExp = currentType === 'expense';
-    const sign  = isExp ? '−' : '+';
+    // Prepare data
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('amount', amount);
+    formData.append('category', category);
+    formData.append('method', method);
+    formData.append('type', type);
 
-    if (isExp) { expense += amount; balance -= amount; }
-    else       { income  += amount; balance += amount; }
-
-    const balEl = document.getElementById('totalBalance');
-    const incEl = document.getElementById('totalIncome');
-    const expEl = document.getElementById('totalExpenses');
-    const savEl = document.getElementById('totalSavings');
-    const fmt  = (n) => formatINR(n);
-
-    if (balEl) balEl.textContent = fmt(balance);
-    if (incEl) incEl.textContent = fmt(income);
-    if (expEl) expEl.textContent = fmt(expense);
-    if (savEl) savEl.textContent = fmt(income - expense);
-
-    const now = new Date();
-    const day = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-    const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
-    const icon = isExp ? categoryIcon(category) : 'fa-money-bill-wave';
-    const note = isExp ? 'Filed now' : 'Income';
-
-    const row = document.createElement('div');
-    row.className = 'led-grid';
-    row.setAttribute('data-category', category);
-    row.innerHTML = `
-        <span class="when"><span class="day">${day}</span>${time}</span>
-        <span class="col-merch"><strong>${escapeHtml(title)}</strong> ${escapeHtml(note)}</span>
-        <span class="cat"><i class="fa-solid ${icon}" aria-hidden="true"></i> ${escapeHtml(category)}</span>
-        <span class="method">${escapeHtml(method)}</span>
-        <span class="amount-wrap">
-            <span class="amount${isExp ? '' : ' pos'}">${sign} ₹${formatINR(amount)}</span>
-            <span class="balance">₹${formatINR(balance)}</span>
-        </span>
-    `;
-
-    const body = document.getElementById('ledgerBody');
-    if (body) body.insertBefore(row, body.firstChild);
-
-    // Also update the heatmap cell for today, if the heatmap is rendered
-    if (typeof updateHeatmapDay === 'function' && isExp) {
-        updateHeatmapDay(now, amount);
+    try {
+        const response = await fetch('api_add_transaction.php', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(`Filed “${title}” successfully. Reloading...`, 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showToast(`Failed: ${result.error}`, 'error');
+        }
+    } catch (err) {
+        showToast('Error saving transaction.', 'error');
     }
-
-    document.getElementById('txForm').reset();
-    closeModal();
-    showToast(`Filed “${title}” for ${sign} ₹${formatINR(amount)}.`, 'success');
 }
 
 function categoryIcon(cat) {
@@ -192,58 +170,23 @@ const heatmapData = {};
 
 // Generate the last ~12 months of plausible data so the heatmap looks lived-in.
 function seedHeatmapData() {
-    const today = new Date(2026, 6, 28); // 28 Jul 2026 (fixed demo date)
-    const totalDays = 371; // ~53 weeks
-    const start = new Date(today);
-    start.setDate(start.getDate() - (totalDays - 1));
-
-    // Seeded PRNG so the demo looks consistent across reloads
-    let seed = 42;
-    const rand = () => {
-        seed = (seed * 9301 + 49297) % 233280;
-        return seed / 233280;
-    };
-
-    for (let i = 0; i < totalDays; i++) {
-        const d = new Date(start);
-        d.setDate(start.getDate() + i);
-        const key = isoDate(d);
-
-        // About 55% empty (like a real contribution graph), rest spread across levels
-        const r = rand();
-        if (r < 0.55) {
-            heatmapData[key] = { total: 0, count: 0 };
-        } else {
-            const base = rand();
-            let total, count;
-            if (base < 0.50) {
-                total = Math.round(1500 + rand() * 6000);    // ₹1.5k – ₹7.5k
-                count = 1 + Math.floor(rand() * 2);
-            } else if (base < 0.80) {
-                total = Math.round(7500 + rand() * 10000);   // ₹7.5k – ₹17.5k
-                count = 1 + Math.floor(rand() * 3);
-            } else if (base < 0.94) {
-                total = Math.round(17500 + rand() * 15000);  // ₹17.5k – ₹32.5k
-                count = 2 + Math.floor(rand() * 3);
-            } else {
-                total = Math.round(32500 + rand() * 28000);  // ₹32.5k – ₹60.5k
-                count = 3 + Math.floor(rand() * 3);
+    if (typeof serverTransactions !== 'undefined' && Array.isArray(serverTransactions)) {
+        serverTransactions.forEach(t => {
+            if (t.type === 'expense') {
+                const d = new Date(t.date.replace(' ', 'T'));
+                if (isNaN(d.getTime())) return;
+                
+                const yyyy = d.getFullYear();
+                const mm   = String(d.getMonth() + 1).padStart(2, '0');
+                const dd   = String(d.getDate()).padStart(2, '0');
+                const key  = `${yyyy}-${mm}-${dd}`;
+                
+                if (!heatmapData[key]) heatmapData[key] = { total: 0, count: 0 };
+                heatmapData[key].total += parseFloat(t.amount);
+                heatmapData[key].count += 1;
             }
-            heatmapData[key] = { total, count };
-        }
+        });
     }
-
-    // Force some interesting recent days to match the dashboard narrative
-    const force = [
-        { d: '2026-07-28', total: 11800.50, count: 1 },  // today, BigBasket
-        { d: '2026-07-25', total: 450000.00, count: 1, isIncome: true },
-        { d: '2026-07-22', total: 8240.00,  count: 1 },
-        { d: '2026-07-20', total: 649.00,   count: 1 },
-        { d: '2026-07-18', total: 1420.00,  count: 1 },
-        { d: '2026-07-14', total: 28000.00, count: 3 },
-        { d: '2026-07-04', total: 42000.00, count: 4 },
-    ];
-    force.forEach(f => { heatmapData[f.d] = { total: f.total, count: f.count }; });
 }
 
 function isoDate(d) {
@@ -273,7 +216,7 @@ function buildHeatmap() {
     grid.innerHTML = '';
     months.innerHTML = '';
 
-    const end   = new Date(2026, 6, 28);
+    const end = new Date(); // Use actual current date
     const totalDays = 371;
     const start = new Date(end);
     start.setDate(start.getDate() - (totalDays - 1));

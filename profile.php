@@ -140,7 +140,7 @@ $flashSuccess = getFlashMessage('success');
             <div class="filing">
                 <span class="num">VOL. 04 · NO. 209</span>
                 <span class="dot" aria-hidden="true"></span>
-                <span><?php echo date('D · d M Y'); ?></span>
+                <span><?php echo strtoupper(date('D · d M Y')); ?></span>
             </div>
             <ul class="nav" role="navigation">
                 <li><a href="dashboard.php" class="<?= $activePage==='overview' ? 'is-active' : '' ?>"><i class="fa-solid fa-house nav-ic"></i><span class="label">Overview</span></a></li>

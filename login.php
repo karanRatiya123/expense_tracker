@@ -150,7 +150,54 @@ $initialTab = $_GET['tab'] ?? 'login';
             background: var(--muted);
             border-radius: var(--radius);
         }
-        .auth-hint code { font-family: var(--font-mono); }
+        .auth-divider {
+            position: relative;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        .auth-divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            border-top: 1px solid var(--border);
+            z-index: 0;
+        }
+        .auth-divider span {
+            position: relative;
+            z-index: 1;
+            background: var(--card);
+            padding: 0 .75rem;
+            color: var(--muted-foreground);
+            font-size: .8rem;
+            font-weight: 500;
+        }
+        .social-logins {
+            display: flex;
+            gap: .5rem;
+            margin-bottom: 1rem;
+        }
+        .social-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .65rem;
+            background: var(--card);
+            color: var(--foreground);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: .9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .15s, border-color .15s;
+        }
+        .social-btn:hover {
+            background: var(--muted);
+            border-color: var(--ring);
+        }
     </style>
 </head>
 <body class="auth">
@@ -178,6 +225,15 @@ $initialTab = $_GET['tab'] ?? 'login';
                 <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
             </label>
             <button type="submit" class="auth-submit">Sign in</button>
+            <div class="auth-divider"><span>Or continue with</span></div>
+            <div class="social-logins">
+                <button type="button" class="social-btn" onclick="window.location.href='oauth.php?provider=google'">
+                    <i class="fab fa-google"></i> Google
+                </button>
+                <button type="button" class="social-btn" onclick="window.location.href='oauth.php?provider=github'">
+                    <i class="fab fa-github"></i> GitHub
+                </button>
+            </div>
             <div class="auth-hint">
                 Demo: <code>demo@apexspend.com</code> / <code>password123</code>
             </div>
@@ -204,6 +260,15 @@ $initialTab = $_GET['tab'] ?? 'login';
                 <input type="password" name="password" required autocomplete="new-password" minlength="6" placeholder="At least 6 characters">
             </label>
             <button type="submit" class="auth-submit">Create account</button>
+            <div class="auth-divider"><span>Or continue with</span></div>
+            <div class="social-logins">
+                <button type="button" class="social-btn" onclick="window.location.href='oauth.php?provider=google'">
+                    <i class="fab fa-google"></i> Google
+                </button>
+                <button type="button" class="social-btn" onclick="window.location.href='oauth.php?provider=github'">
+                    <i class="fab fa-github"></i> GitHub
+                </button>
+            </div>
         </form>
 
         <p class="auth-foot" data-foot="login" style="<?= $initialTab === 'login' ? '' : 'display:none' ?>">

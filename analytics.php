@@ -15,36 +15,10 @@ function format_inr($n) {
 }
 
 // ---- Seed demo transactions (KEEP IN SYNC with transactions.php) ----
-if (!isset($_SESSION['transactions'])) {
-    if (isset($user['email']) && $user['email'] === 'demo@apexspend.com') {
-        $_SESSION['transactions'] = [
-            ['id' => 'tx_201', 'type' => 'expense', 'title' => 'Chai Point',        'note' => 'Evening chai & samosa',          'amount' => 180.00,    'category' => 'Food & Dining',         'date' => '2026-07-28T15:45:00', 'method' => 'UPI ··4182'],
-            ['id' => 'tx_202', 'type' => 'expense', 'title' => 'BigBasket',         'note' => 'Weekly groceries',               'amount' => 11800.50,  'category' => 'Food & Dining',         'date' => '2026-07-28T14:30:00', 'method' => 'UPI ··4182'],
-            ['id' => 'tx_203', 'type' => 'income',  'title' => 'Tech Corp Payroll', 'note' => 'Salary, July',                    'amount' => 450000.00, 'category' => 'Income',                'date' => '2026-07-25T09:00:00', 'method' => 'NEFT ··0019'],
-            ['id' => 'tx_204', 'type' => 'expense', 'title' => 'Tata Power',        'note' => 'Electric bill, July',             'amount' => 8240.00,   'category' => 'Housing & Utilities',   'date' => '2026-07-22T10:14:00', 'method' => 'NEFT ··0019'],
-            ['id' => 'tx_205', 'type' => 'expense', 'title' => 'Netflix',           'note' => 'Standard plan, monthly',          'amount' => 649.00,    'category' => 'Entertainment',         'date' => '2026-07-20T18:12:00', 'method' => 'UPI ··4182'],
-            ['id' => 'tx_206', 'type' => 'expense', 'title' => 'Rapido',            'note' => 'Ride to Kempegowda Airport, T2',  'amount' => 1420.00,   'category' => 'Transportation',        'date' => '2026-07-18T11:30:00', 'method' => 'UPI'],
-            ['id' => 'tx_207', 'type' => 'expense', 'title' => 'Apollo Pharmacy',   'note' => 'Vitamins & first-aid',            'amount' => 2150.00,   'category' => 'Health & Medical',      'date' => '2026-07-15T19:45:00', 'method' => 'RuPay ··2207'],
-            ['id' => 'tx_208', 'type' => 'expense', 'title' => 'H&M',               'note' => 'Summer wardrobe',                 'amount' => 6480.00,   'category' => 'Shopping & Retail',     'date' => '2026-07-12T16:22:00', 'method' => 'RuPay ··2207'],
-            ['id' => 'tx_209', 'type' => 'expense', 'title' => 'BESCOM',            'note' => 'Electricity, June',               'amount' => 6450.00,   'category' => 'Housing & Utilities',   'date' => '2026-07-08T10:00:00', 'method' => 'NEFT ··0019'],
-            ['id' => 'tx_210', 'type' => 'expense', 'title' => 'Indigo',            'note' => 'Flight BOM → BLR',                'amount' => 8950.00,   'category' => 'Transportation',        'date' => '2026-07-05T07:15:00', 'method' => 'RuPay ··2207'],
-            ['id' => 'tx_211', 'type' => 'expense', 'title' => 'Toit Brewery',      'note' => 'Dinner with friends',             'amount' => 4200.00,   'category' => 'Food & Dining',         'date' => '2026-07-03T20:30:00', 'method' => 'UPI ··4182'],
-            ['id' => 'tx_212', 'type' => 'expense', 'title' => 'BookMyShow',        'note' => 'Inox, 4 tickets',                 'amount' => 1800.00,   'category' => 'Entertainment',         'date' => '2026-07-01T19:00:00', 'method' => 'UPI ··4182'],
-            ['id' => 'tx_213', 'type' => 'expense', 'title' => 'Airtel Broadband',  'note' => 'Monthly plan',                    'amount' => 999.00,    'category' => 'Housing & Utilities',   'date' => '2026-06-28T08:00:00', 'method' => 'NEFT ··0019'],
-            ['id' => 'tx_214', 'type' => 'expense', 'title' => 'Decathlon',         'note' => 'Running shoes',                   'amount' => 5999.00,   'category' => 'Shopping & Retail',     'date' => '2026-06-25T14:10:00', 'method' => 'RuPay ··2207'],
-            ['id' => 'tx_215', 'type' => 'income',  'title' => 'Freelance Project', 'note' => 'UI design — milestone 2',         'amount' => 75000.00,  'category' => 'Income',                'date' => '2026-06-20T11:00:00', 'method' => 'IMPS'],
-            ['id' => 'tx_216', 'type' => 'expense', 'title' => 'Ola Cabs',          'note' => 'Airport → Home',                  'amount' => 1120.00,   'category' => 'Transportation',        'date' => '2026-06-18T23:45:00', 'method' => 'UPI'],
-            ['id' => 'tx_217', 'type' => 'expense', 'title' => 'Saravana Bhavan',   'note' => 'Family dinner',                   'amount' => 2840.00,   'category' => 'Food & Dining',         'date' => '2026-06-15T20:00:00', 'method' => 'Cash'],
-            ['id' => 'tx_218', 'type' => 'expense', 'title' => 'Cult Fitness',      'note' => 'Monthly membership',              'amount' => 2500.00,   'category' => 'Health & Medical',      'date' => '2026-06-10T07:30:00', 'method' => 'NEFT ··0019'],
-            ['id' => 'tx_219', 'type' => 'expense', 'title' => 'Spotify',           'note' => 'Premium, family plan',            'amount' => 299.00,    'category' => 'Entertainment',         'date' => '2026-06-05T09:00:00', 'method' => 'RuPay ··2207'],
-            ['id' => 'tx_220', 'type' => 'expense', 'title' => 'Manipal Hospital',  'note' => 'Annual health check-up',           'amount' => 7800.00,   'category' => 'Health & Medical',      'date' => '2026-06-02T11:30:00', 'method' => 'RuPay ··2207'],
-        ];
-    } else {
-        $_SESSION['transactions'] = [];
-    }
-}
-
-$transactions = $_SESSION['transactions'];
+$pdo = getDBConnection();
+$stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC");
+$stmt->execute([$user['id']]);
+$transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $hasData = !empty($transactions);
 
 // =========================================================================
@@ -331,7 +305,7 @@ $dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
             <div class="filing">
                 <span class="num">VOL. 04 · NO. 209</span>
                 <span class="dot" aria-hidden="true"></span>
-                <span>TUES · 28 JUL 2026</span>
+                <span><?php echo strtoupper(date('D · d M Y')); ?></span>
             </div>
 
             <ul class="nav" role="navigation">
@@ -708,14 +682,9 @@ $dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
                                 <span class="rec-amt">₹<?php echo format_inr($oo['amount']); ?></span>
                             </li>
                         <?php endforeach; endif; ?>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- =================== FOOTER =================== -->
+                     <!-- =================== FOOTER =================== -->
         <footer class="analytics-foot">
-            Compiled 28 JUL 2026 · Filed under § 03 · End of deep analytics.
+            Compiled <?php echo strtoupper(date('d M Y')); ?> · Filed under § 03 · End of deep analytics.
         </footer>
 
         <?php endif; /* hasData */ ?>
@@ -725,6 +694,11 @@ $dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 <!-- Toast container + data blob -->
 <div id="toastContainer" class="toast-stack" aria-live="polite"></div>
 <script id="analyticsData" type="application/json"><?php echo $jsonPayload; ?></script>
+
+<!-- Expose data for Chart.js -->
+<script>
+    const serverTransactions = <?php echo json_encode($transactions); ?>;
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="analytics.js?v=<?php echo time(); ?>"></script>
 </body>
