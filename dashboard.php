@@ -9,6 +9,63 @@ if (!isset($_SESSION['user'])) {
 $user = $_SESSION['user'];
 $initials = strtoupper(substr($user['name'], 0, 1));
 $activePage = 'overview';
+
+// Use same demo data logic as other pages
+if (!isset($_SESSION['transactions'])) {
+    if (isset($user['email']) && $user['email'] === 'demo@apexspend.com') {
+        $_SESSION['transactions'] = [
+            ['id' => 'tx_201', 'type' => 'expense', 'title' => 'Chai Point',        'note' => 'Evening chai & samosa',          'amount' => 180.00,    'category' => 'Food & Dining',         'date' => '2026-07-28T15:45:00', 'method' => 'UPI ··4182'],
+            ['id' => 'tx_202', 'type' => 'expense', 'title' => 'BigBasket',         'note' => 'Weekly groceries',               'amount' => 11800.50,  'category' => 'Food & Dining',         'date' => '2026-07-28T14:30:00', 'method' => 'UPI ··4182'],
+            ['id' => 'tx_203', 'type' => 'income',  'title' => 'Tech Corp Payroll', 'note' => 'Salary, July',                    'amount' => 450000.00, 'category' => 'Income',                'date' => '2026-07-25T09:00:00', 'method' => 'NEFT ··0019'],
+            ['id' => 'tx_204', 'type' => 'expense', 'title' => 'Tata Power',        'note' => 'Electric bill, July',             'amount' => 8240.00,   'category' => 'Housing & Utilities',   'date' => '2026-07-22T10:14:00', 'method' => 'NEFT ··0019'],
+            ['id' => 'tx_205', 'type' => 'expense', 'title' => 'Netflix',           'note' => 'Standard plan, monthly',          'amount' => 649.00,    'category' => 'Entertainment',         'date' => '2026-07-20T18:12:00', 'method' => 'UPI ··4182'],
+            ['id' => 'tx_206', 'type' => 'expense', 'title' => 'Rapido',            'note' => 'Ride to Kempegowda Airport, T2',  'amount' => 1420.00,   'category' => 'Transportation',        'date' => '2026-07-18T11:30:00', 'method' => 'UPI'],
+            ['id' => 'tx_207', 'type' => 'expense', 'title' => 'Apollo Pharmacy',   'note' => 'Vitamins & first-aid',            'amount' => 2150.00,   'category' => 'Health & Medical',      'date' => '2026-07-15T19:45:00', 'method' => 'RuPay ··2207'],
+            ['id' => 'tx_208', 'type' => 'expense', 'title' => 'H&M',               'note' => 'Summer wardrobe',                 'amount' => 6480.00,   'category' => 'Shopping & Retail',     'date' => '2026-07-12T16:22:00', 'method' => 'RuPay ··2207'],
+            ['id' => 'tx_209', 'type' => 'expense', 'title' => 'BESCOM',            'note' => 'Electricity, June',               'amount' => 6450.00,   'category' => 'Housing & Utilities',   'date' => '2026-07-08T10:00:00', 'method' => 'NEFT ··0019'],
+            ['id' => 'tx_210', 'type' => 'expense', 'title' => 'Indigo',            'note' => 'Flight BOM → BLR',                'amount' => 8950.00,   'category' => 'Transportation',        'date' => '2026-07-05T07:15:00', 'method' => 'RuPay ··2207'],
+            ['id' => 'tx_211', 'type' => 'expense', 'title' => 'Toit Brewery',      'note' => 'Dinner with friends',             'amount' => 4200.00,   'category' => 'Food & Dining',         'date' => '2026-07-03T20:30:00', 'method' => 'UPI ··4182'],
+            ['id' => 'tx_212', 'type' => 'expense', 'title' => 'BookMyShow',        'note' => 'Inox, 4 tickets',                 'amount' => 1800.00,   'category' => 'Entertainment',         'date' => '2026-07-01T19:00:00', 'method' => 'UPI ··4182'],
+            ['id' => 'tx_213', 'type' => 'expense', 'title' => 'Airtel Broadband',  'note' => 'Monthly plan',                    'amount' => 999.00,    'category' => 'Housing & Utilities',   'date' => '2026-06-28T08:00:00', 'method' => 'NEFT ··0019'],
+            ['id' => 'tx_214', 'type' => 'expense', 'title' => 'Decathlon',         'note' => 'Running shoes',                   'amount' => 5999.00,   'category' => 'Shopping & Retail',     'date' => '2026-06-25T14:10:00', 'method' => 'RuPay ··2207'],
+            ['id' => 'tx_215', 'type' => 'income',  'title' => 'Freelance Project', 'note' => 'UI design — milestone 2',         'amount' => 75000.00,  'category' => 'Income',                'date' => '2026-06-20T11:00:00', 'method' => 'IMPS'],
+            ['id' => 'tx_216', 'type' => 'expense', 'title' => 'Ola Cabs',          'note' => 'Airport → Home',                  'amount' => 1120.00,   'category' => 'Transportation',        'date' => '2026-06-18T23:45:00', 'method' => 'UPI'],
+            ['id' => 'tx_217', 'type' => 'expense', 'title' => 'Saravana Bhavan',   'note' => 'Family dinner',                   'amount' => 2840.00,   'category' => 'Food & Dining',         'date' => '2026-06-15T20:00:00', 'method' => 'Cash'],
+            ['id' => 'tx_218', 'type' => 'expense', 'title' => 'Cult Fitness',      'note' => 'Monthly membership',              'amount' => 2500.00,   'category' => 'Health & Medical',      'date' => '2026-06-10T07:30:00', 'method' => 'NEFT ··0019'],
+            ['id' => 'tx_219', 'type' => 'expense', 'title' => 'Spotify',           'note' => 'Premium, family plan',            'amount' => 299.00,    'category' => 'Entertainment',         'date' => '2026-06-05T09:00:00', 'method' => 'RuPay ··2207'],
+            ['id' => 'tx_220', 'type' => 'expense', 'title' => 'Manipal Hospital',  'note' => 'Annual health check-up',           'amount' => 7800.00,   'category' => 'Health & Medical',      'date' => '2026-06-02T11:30:00', 'method' => 'RuPay ··2207'],
+        ];
+    } else {
+        $_SESSION['transactions'] = [];
+    }
+}
+
+$transactions = $_SESSION['transactions'];
+
+$total_in  = 0;
+$total_out = 0;
+foreach ($transactions as $t) {
+    if ($t['type'] === 'income') $total_in += $t['amount'];
+    else $total_out += $t['amount'];
+}
+$net = $total_in - $total_out;
+
+function format_inr($n) {
+    return number_format((float)$n, 2, '.', ',');
+}
+
+function category_icon($cat) {
+    $map = [
+        'Food & Dining' => 'fa-utensils',
+        'Housing & Utilities' => 'fa-bolt',
+        'Shopping & Retail' => 'fa-bag-shopping',
+        'Transportation' => 'fa-car',
+        'Entertainment' => 'fa-film',
+        'Income' => 'fa-money-bill-wave',
+        'Health & Medical' => 'fa-briefcase-medical',
+    ];
+    return $map[$cat] ?? 'fa-receipt';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -96,7 +153,7 @@ $activePage = 'overview';
             <div class="masthead-figure">
                 <div class="figure-label">Net balance · July</div>
                 <div class="figure-value">
-                    <span class="currency">₹</span><span id="totalBalance">12,84,550.00</span>
+                    <span class="currency">₹</span><span id="totalBalance"><?php echo format_inr($net); ?></span>
                 </div>
                 <div class="figure-meta">
                     <span class="trend up">▲ 14.2%</span>
@@ -120,7 +177,7 @@ $activePage = 'overview';
             <div class="cell">
                 <div class="cell-num">01</div>
                 <div class="label">Income, July</div>
-                <div class="figure"><span class="currency">₹</span><span id="totalIncome">8,50,000.00</span></div>
+                <div class="figure"><span class="currency">₹</span><span id="totalIncome"><?php echo format_inr($total_in); ?></span></div>
                 <div class="meta"><span class="trend up">▲ 6.2%</span><span>vs. June</span></div>
                 <!-- Mini bar chart: income by month -->
                 <div class="spark" aria-hidden="true">
@@ -135,7 +192,7 @@ $activePage = 'overview';
             <div class="cell">
                 <div class="cell-num">02</div>
                 <div class="label">Outflows, July</div>
-                <div class="figure"><span class="currency">₹</span><span id="totalExpenses">3,21,450.00</span></div>
+                <div class="figure"><span class="currency">₹</span><span id="totalExpenses"><?php echo format_inr($total_out); ?></span></div>
                 <div class="meta"><span class="trend down">▼ 3.7%</span><span>vs. June</span></div>
                 <div class="spark" aria-hidden="true">
                     <span class="bar alt" style="--h: 72%"></span>
@@ -426,77 +483,40 @@ $activePage = 'overview';
                 </div>
 
                 <div id="ledgerBody">
-
-                    <div class="led-grid" data-category="Food & Dining">
-                        <span class="when"><span class="day">28 Jul</span>15:45</span>
-                        <span class="col-merch"><strong>Chai Point</strong> Evening chai &amp; samosa</span>
-                        <span class="cat"><i class="fa-solid fa-utensils" aria-hidden="true"></i> Food &amp; Dining</span>
-                        <span class="method">UPI ··4182</span>
+                <?php 
+                $run_balance = $net;
+                $display_transactions = array_slice($transactions, 0, 6);
+                foreach ($display_transactions as $t): 
+                    $isIncome = $t['type'] === 'income';
+                    $sign = $isIncome ? '+' : '−';
+                    $cls = $isIncome ? 'amount pos' : 'amount';
+                    
+                    // Simple logic for the demo run balance
+                    $curr_balance = $run_balance;
+                    if ($isIncome) {
+                        $run_balance -= $t['amount'];
+                    } else {
+                        $run_balance += $t['amount'];
+                    }
+                ?>
+                    <div class="led-grid" data-category="<?php echo htmlspecialchars($t['category']); ?>">
+                        <span class="when"><span class="day"><?php echo date('d M', strtotime($t['date'])); ?></span><?php echo date('H:i', strtotime($t['date'])); ?></span>
+                        <span class="col-merch"><strong><?php echo htmlspecialchars($t['title']); ?></strong> <?php echo htmlspecialchars($t['note']); ?></span>
+                        <span class="cat"><i class="fa-solid <?php echo category_icon($t['category']); ?>" aria-hidden="true"></i> <?php echo htmlspecialchars($t['category']); ?></span>
+                        <span class="method"><?php echo htmlspecialchars($t['method']); ?></span>
                         <span class="amount-wrap">
-                            <span class="amount">− ₹180.00</span>
-                            <span class="balance">₹12,84,370.00</span>
+                            <span class="<?php echo $cls; ?>"><?php echo $sign; ?> ₹<?php echo format_inr($t['amount']); ?></span>
+                            <span class="balance">₹<?php echo format_inr($curr_balance); ?></span>
                         </span>
                     </div>
-
-                    <div class="led-grid" data-category="Food & Dining">
-                        <span class="when"><span class="day">28 Jul</span>14:30</span>
-                        <span class="col-merch"><strong>BigBasket</strong> Weekly groceries</span>
-                        <span class="cat"><i class="fa-solid fa-utensils" aria-hidden="true"></i> Food &amp; Dining</span>
-                        <span class="method">UPI ··4182</span>
-                        <span class="amount-wrap">
-                            <span class="amount">− ₹11,800.50</span>
-                            <span class="balance">₹12,84,550.00</span>
-                        </span>
-                    </div>
-
-                    <div class="led-grid" data-category="Income">
-                        <span class="when"><span class="day">25 Jul</span>09:00</span>
-                        <span class="col-merch"><strong>Tech Corp Payroll</strong> Salary, July</span>
-                        <span class="cat"><i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i> Income</span>
-                        <span class="method">NEFT ··0019</span>
-                        <span class="amount-wrap">
-                            <span class="amount pos">+ ₹4,50,000.00</span>
-                            <span class="balance">₹12,98,800.00</span>
-                        </span>
-                    </div>
-
-                    <div class="led-grid" data-category="Housing & Utilities">
-                        <span class="when"><span class="day">22 Jul</span>10:14</span>
-                        <span class="col-merch"><strong>Tata Power</strong> Electric, Jul</span>
-                        <span class="cat"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Housing &amp; Utilities</span>
-                        <span class="method">NEFT ··0019</span>
-                        <span class="amount-wrap">
-                            <span class="amount">− ₹8,240.00</span>
-                            <span class="balance">₹8,48,800.00</span>
-                        </span>
-                    </div>
-
-                    <div class="led-grid" data-category="Entertainment">
-                        <span class="when"><span class="day">20 Jul</span>18:12</span>
-                        <span class="col-merch"><strong>Netflix</strong> Standard plan</span>
-                        <span class="cat"><i class="fa-solid fa-film" aria-hidden="true"></i> Entertainment</span>
-                        <span class="method">UPI ··4182</span>
-                        <span class="amount-wrap">
-                            <span class="amount">− ₹649.00</span>
-                            <span class="balance">₹8,58,640.00</span>
-                        </span>
-                    </div>
-
-                    <div class="led-grid" data-category="Transportation">
-                        <span class="when"><span class="day">18 Jul</span>11:30</span>
-                        <span class="col-merch"><strong>Rapido</strong> Ride to Kempegowda Airport, T2</span>
-                        <span class="cat"><i class="fa-solid fa-car" aria-hidden="true"></i> Transportation</span>
-                        <span class="method">UPI</span>
-                        <span class="amount-wrap">
-                            <span class="amount">− ₹1,420.00</span>
-                            <span class="balance">₹8,60,639.00</span>
-                        </span>
-                    </div>
-
+                <?php endforeach; ?>
+                <?php if(empty($display_transactions)): ?>
+                    <p style="padding: 20px; color: var(--whisper);">No transactions on file.</p>
+                <?php endif; ?>
                 </div>
 
                 <div class="ledger-foot">
-                    <span class="filing">Filed 28 Jul 2026 — Page 01 of 01</span>
+                    <span class="filing">Filed <?php echo date('d M Y'); ?> — Page 01 of 01</span>
                     <span class="muted">End of entries.</span>
                 </div>
             </div>
