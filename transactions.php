@@ -52,12 +52,22 @@ foreach ($transactions as $t) {
 }
 $net = $total_in - $total_out;
 
-// Unique categories for filter chips
+// Unique categories for filter chips and edit form
+$standardCategories = [
+    'Food & Dining',
+    'Housing & Utilities',
+    'Shopping & Retail',
+    'Transportation',
+    'Entertainment',
+    'Health & Medical',
+    'Income',
+];
 $categories = [];
 foreach ($transactions as $t) {
     $categories[$t['category']] = true;
 }
-$categories = array_keys($categories);
+$categoryCount = count($categories);
+$categories = array_values(array_unique(array_merge($standardCategories, array_keys($categories))));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -170,7 +180,7 @@ $categories = array_keys($categories);
                 <div class="cell-num">03</div>
                 <div class="label">Entries on file</div>
                 <div class="figure"><span id="totalCount"><?php echo $count; ?></span></div>
-                <div class="meta"><span class="muted">Across <?php echo count($categories); ?> categories</span></div>
+                <div class="meta"><span class="muted">Across <?php echo $categoryCount; ?> categories</span></div>
             </div>
         </section>
 
@@ -212,6 +222,7 @@ $categories = array_keys($categories);
                     <span class="col-label">Category</span>
                     <span class="col-label col-num">Method</span>
                     <span class="col-label col-num">Amount</span>
+                    <span class="col-label col-num">Actions</span>
                 </div>
 
                 <!-- Body -->
@@ -226,6 +237,12 @@ $categories = array_keys($categories);
                          data-category="<?php echo htmlspecialchars($t['category']); ?>"
                          data-type="<?php echo htmlspecialchars($t['type']); ?>"
                          data-merchant="<?php echo htmlspecialchars($t['title'] . ' ' . $t['note']); ?>"
+                         data-id="<?php echo htmlspecialchars($t['id']); ?>"
+                         data-title="<?php echo htmlspecialchars($t['title']); ?>"
+                         data-note="<?php echo htmlspecialchars($t['note']); ?>"
+                         data-amount="<?php echo htmlspecialchars($t['amount']); ?>"
+                         data-method="<?php echo htmlspecialchars($t['method']); ?>"
+                         data-date="<?php echo htmlspecialchars(date('Y-m-d\TH:i', strtotime($t['date']))); ?>"
                          data-hay="<?php echo htmlspecialchars($searchHay); ?>">
                         <span class="when">
                             <span class="day"><?php echo format_long_date($t['date']); ?></span>
@@ -243,6 +260,14 @@ $categories = array_keys($categories);
                         <span class="amount-wrap">
                             <span class="<?php echo $cls; ?>"><?php echo $sign; ?> ₹<?php echo format_inr($t['amount']); ?></span>
                         </span>
+                        <span class="row-actions">
+                            <button type="button" class="icon-btn edit-tx" aria-label="Edit <?php echo htmlspecialchars($t['title']); ?>" title="Edit">
+                                <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="icon-btn danger delete-tx" aria-label="Delete <?php echo htmlspecialchars($t['title']); ?>" title="Delete">
+                                <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                            </button>
+                        </span>
                     </div>
                 <?php endforeach; ?>
                 </div>
@@ -256,6 +281,90 @@ $categories = array_keys($categories);
         </section>
 
     </main>
+</div>
+
+<div class="scrim" id="editTxModal" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-labelledby="editSheetTitle">
+        <div class="sheet-head">
+            <div>
+                <span class="kicker-num">Â§ 04</span>
+                <h3 id="editSheetTitle">Edit entry</h3>
+            </div>
+            <button type="button" class="close" id="editTxClose" aria-label="Close">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div class="toggle-pair" role="tablist" aria-label="Transaction type">
+            <button type="button" id="editTypeExpenseBtn" class="is-on expense" data-edit-type="expense">Expense</button>
+            <button type="button" id="editTypeIncomeBtn" class="income" data-edit-type="income">Income</button>
+        </div>
+
+        <form id="editTxForm">
+            <input type="hidden" id="editTxId">
+
+            <div class="field">
+                <div class="field-row"><label for="editTxTitle">Merchant or note</label></div>
+                <div class="input-shell">
+                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                    <input type="text" id="editTxTitle" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-row"><label for="editTxNote">Detail note</label></div>
+                <div class="input-shell">
+                    <i class="fa-regular fa-note-sticky" aria-hidden="true"></i>
+                    <input type="text" id="editTxNote">
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="field">
+                    <div class="field-row"><label for="editTxAmount">Amount</label></div>
+                    <div class="input-shell">
+                        <i class="fa-solid fa-indian-rupee-sign" aria-hidden="true"></i>
+                        <input type="number" step="0.01" min="0.01" id="editTxAmount" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-row"><label for="editTxCategory">Category</label></div>
+                    <div class="input-shell">
+                        <i class="fa-solid fa-tag" aria-hidden="true"></i>
+                        <select id="editTxCategory">
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="field">
+                    <div class="field-row"><label for="editTxMethod">Payment method</label></div>
+                    <div class="input-shell">
+                        <i class="fa-regular fa-credit-card" aria-hidden="true"></i>
+                        <input type="text" id="editTxMethod">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-row"><label for="editTxDate">Date</label></div>
+                    <div class="input-shell">
+                        <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                        <input type="datetime-local" id="editTxDate" required>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit">
+                <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                <span>Save entry</span>
+            </button>
+        </form>
+    </div>
 </div>
 
 <div id="toastContainer" class="toast-stack" aria-live="polite"></div>

@@ -9,6 +9,7 @@ Screenshot 2026-07-28 200114.png
 *.log
 *.bak
 *.tmp
+.sessions/
 
 # Editor / OS
 .vscode/

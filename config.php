@@ -4,6 +4,13 @@
  */
 
 if (session_status() === PHP_SESSION_NONE) {
+    $sessionPath = __DIR__ . DIRECTORY_SEPARATOR . '.sessions';
+    if (!is_dir($sessionPath)) {
+        mkdir($sessionPath, 0775, true);
+    }
+    if (is_writable($sessionPath)) {
+        session_save_path($sessionPath);
+    }
     session_start();
 }
 
@@ -12,6 +19,7 @@ define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'apexspend_db');
+define('ENABLE_RECAPS', false);
 
 /**
  * Get Database Connection (PDO)

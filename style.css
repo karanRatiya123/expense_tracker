@@ -1038,7 +1038,7 @@ input, select, textarea {
 /* Ledger Grid Rows */
 .led-grid {
     display: grid;
-    grid-template-columns: 110px 1.8fr 1.2fr 110px 160px;
+    grid-template-columns: 110px 1.8fr 1.2fr 110px 160px 86px;
     gap: 16px;
     padding: 18px 20px;
     align-items: center;
@@ -1148,6 +1148,34 @@ input, select, textarea {
 
 .amount.pos { color: var(--gain); }
 
+.row-actions {
+    display: inline-flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.icon-btn {
+    width: 32px;
+    height: 32px;
+    border: var(--hairline);
+    border-radius: 999px;
+    color: var(--muted-text);
+    display: inline-grid;
+    place-items: center;
+    transition: all var(--transition);
+}
+
+.icon-btn:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+    background: var(--mist);
+}
+
+.icon-btn.danger:hover {
+    color: var(--loss);
+    border-color: var(--loss);
+}
+
 .balance {
     font-family: var(--mono);
     font-variant-numeric: tabular-nums;
@@ -1171,9 +1199,13 @@ input, select, textarea {
 .muted { color: var(--muted-text); }
 
 @media (max-width: 800px) {
-    .led-grid { grid-template-columns: 90px 1fr 110px; }
+    .led-grid { grid-template-columns: 90px 1fr 110px 78px; }
     .led-grid .cat,
     .led-grid .method { display: none; }
+    .led-grid.head .col-label:nth-child(3),
+    .led-grid.head .col-label:nth-child(4) { display: none; }
+    .row-actions { gap: 6px; }
+    .icon-btn { width: 30px; height: 30px; }
 }
 
 /* ==========================================================================
