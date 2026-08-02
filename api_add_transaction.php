@@ -37,6 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $success = $stmt->execute([$txId, $userId, $type, $title, $note, $amount, $category, $date, $method]);
 
     if ($success) {
+        if ($type === 'expense') {
+            $stmtCheck = $pdo->prepare('SELECT id FROM budgets WHERE user_id = ? AND category = ?');
+            $stmtCheck->execute([$userId, $category]);
+            if (!$stmtCheck->fetch()) {
+                $bgId = 'bg_' . uniqid();
+                $stmtBg = $pdo->prepare('INSERT INTO budgets (id, user_id, category, amount, period_type, thresholds) VALUES (?, ?, ?, ?, ?, ?)');
+                $stmtBg->execute([$bgId, $userId, $category, 5000, 'monthly', '[75,90,100]']);
+            }
+        }
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['success' => false, 'error' => 'Failed to save transaction']);
