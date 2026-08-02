@@ -68,6 +68,7 @@ async function handleAddTransaction(e) {
     formData.append('category', category);
     formData.append('method', method);
     formData.append('type', type);
+    formData.append('_token', window.APEX_TOKEN || '');
 
     try {
         const response = await fetch('api_add_transaction.php', {

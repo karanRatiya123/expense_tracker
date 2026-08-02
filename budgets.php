@@ -326,6 +326,9 @@ $jsonPayload = json_encode(
 <div id="toastContainer" class="toast-stack" aria-live="polite"></div>
 <script id="budgetsData" type="application/json"><?php echo $jsonPayload; ?></script>
 <script>
+    window.APEX_TOKEN = <?php echo json_encode(csrf_token()); ?>;
+</script>
+<script>
     const serverTransactions = <?php echo json_encode($transactions); ?>;
 </script>
 <script src="script.js?v=<?php echo time(); ?>"></script>

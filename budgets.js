@@ -139,6 +139,7 @@
       if (b.period.endDate) fd.append('end_date', b.period.endDate);
     }
     fd.append('thresholds', JSON.stringify(b.thresholds || [75, 90, 100]));
+    fd.append('_token', window.APEX_TOKEN || '');
     try {
       await fetch('api_save_budget.php', { method: 'POST', body: fd });
     } catch (e) {
@@ -149,6 +150,7 @@
   async function deleteBudgetFromDB(id) {
     const fd = new FormData();
     fd.append('id', id);
+    fd.append('_token', window.APEX_TOKEN || '');
     try {
       await fetch('api_delete_budget.php', { method: 'POST', body: fd });
     } catch (e) {

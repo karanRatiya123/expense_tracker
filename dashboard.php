@@ -28,6 +28,10 @@ $outflows_last_month = 0;
 $total_in = 0;
 $total_out = 0;
 
+$monthly_income = array_fill(0, 6, 0);
+$monthly_outflows = array_fill(0, 6, 0);
+$current_time = time();
+
 foreach ($transactions as $t) {
     $t_time = strtotime($t['date']);
     $t_month = date('m', $t_time);
@@ -45,8 +49,26 @@ foreach ($transactions as $t) {
         if ($t['type'] === 'income') $income_last_month += $t['amount'];
         else $outflows_last_month += $t['amount'];
     }
+    
+    $months_ago = (date('Y', $current_time) - date('Y', $t_time)) * 12 + (date('m', $current_time) - date('m', $t_time));
+    if ($months_ago >= 0 && $months_ago < 6) {
+        $idx = 5 - $months_ago;
+        if ($t['type'] === 'income') $monthly_income[$idx] += $t['amount'];
+        else $monthly_outflows[$idx] += $t['amount'];
+    }
 }
 $net = $total_in - $total_out;
+
+$net_last_month = $net - ($income_this_month - $outflows_this_month);
+$net_trend = $net_last_month != 0 ? (($net - $net_last_month) / abs($net_last_month)) * 100 : ($net > 0 ? 100 : 0);
+
+$hour = (int)date('H');
+if ($hour < 12) $greeting = 'Good morning';
+elseif ($hour < 17) $greeting = 'Good afternoon';
+else $greeting = 'Good evening';
+
+$max_income = max($monthly_income) ?: 1;
+$max_outflows = max($monthly_outflows) ?: 1;
 
 $income_trend = $income_last_month > 0 ? (($income_this_month - $income_last_month) / $income_last_month) * 100 : ($income_this_month > 0 ? 100 : 0);
 $outflows_trend = $outflows_last_month > 0 ? (($outflows_this_month - $outflows_last_month) / $outflows_last_month) * 100 : ($outflows_this_month > 0 ? 100 : 0);
@@ -106,7 +128,7 @@ function category_icon($cat) {
             <div class="filing">
                 <span class="num">VOL. 04 · NO. 209</span>
                 <span class="dot" aria-hidden="true"></span>
-                <span>TUES · 28 JUL 2026</span>
+                <span><?php echo strtoupper(date('D · d M Y')); ?></span>
             </div>
 
             <ul class="nav" role="navigation">
@@ -155,17 +177,17 @@ function category_icon($cat) {
                     <span class="kicker-num">§ 01</span>
                     <span class="kicker-text">The Daily Ledger</span>
                 </div>
-                <h1>Good evening,<br><em><?php echo htmlspecialchars(explode(' ', $user['name'])[0]); ?></em>.</h1>
+                <h1><?php echo $greeting; ?>,<br><em><?php echo htmlspecialchars(explode(' ', $user['name'])[0]); ?></em>.</h1>
                 <p class="standfirst">Six figures, two charts, and the line items in between — filed in the order they happened.</p>
             </div>
 
             <div class="masthead-figure">
-                <div class="figure-label">Net balance · July</div>
+                <div class="figure-label">Net balance · <?php echo date('F'); ?></div>
                 <div class="figure-value">
                     <span class="currency">₹</span><span id="totalBalance"><?php echo format_inr($net); ?></span>
                 </div>
                 <div class="figure-meta">
-                    <span class="trend up">▲ 14.2%</span>
+                    <span class="trend <?php echo $net_trend >= 0 ? 'up' : 'down'; ?>"><?php echo $net_trend >= 0 ? '▲' : '▼'; ?> <?php echo number_format(abs($net_trend), 1); ?>%</span>
                     <span class="muted">vs. last month</span>
                 </div>
                 <div class="actions">
@@ -190,12 +212,9 @@ function category_icon($cat) {
                 <div class="meta"><span class="trend <?php echo $income_trend >= 0 ? 'up' : 'down'; ?>"><?php echo $income_trend >= 0 ? '▲' : '▼'; ?> <?php echo number_format(abs($income_trend), 1); ?>%</span><span>vs. <?php echo date('M', strtotime('-1 month')); ?></span></div>
                 <!-- Mini bar chart: income by month -->
                 <div class="spark" aria-hidden="true">
-                    <span class="bar" style="--h: 60%"></span>
-                    <span class="bar" style="--h: 68%"></span>
-                    <span class="bar" style="--h: 64%"></span>
-                    <span class="bar" style="--h: 78%"></span>
-                    <span class="bar" style="--h: 80%"></span>
-                    <span class="bar is-peak" style="--h: 88%"></span>
+                    <?php foreach ($monthly_income as $amt): ?>
+                    <span class="bar <?php echo $amt == $max_income && $amt > 0 ? 'is-peak' : ''; ?>" style="--h: <?php echo ($amt / $max_income * 100); ?>%"></span>
+                    <?php endforeach; ?>
                 </div>
             </div>
             <div class="cell">
@@ -204,12 +223,9 @@ function category_icon($cat) {
                 <div class="figure"><span class="currency">₹</span><span id="totalExpenses"><?php echo format_inr($outflows_this_month); ?></span></div>
                 <div class="meta"><span class="trend <?php echo $outflows_trend <= 0 ? 'up' : 'down'; ?>"><?php echo $outflows_trend >= 0 ? '▲' : '▼'; ?> <?php echo number_format(abs($outflows_trend), 1); ?>%</span><span>vs. <?php echo date('M', strtotime('-1 month')); ?></span></div>
                 <div class="spark" aria-hidden="true">
-                    <span class="bar alt" style="--h: 72%"></span>
-                    <span class="bar alt" style="--h: 80%"></span>
-                    <span class="bar alt" style="--h: 64%"></span>
-                    <span class="bar alt" style="--h: 92%"></span>
-                    <span class="bar alt" style="--h: 70%"></span>
-                    <span class="bar alt" style="--h: 74%"></span>
+                    <?php foreach ($monthly_outflows as $amt): ?>
+                    <span class="bar alt <?php echo $amt == $max_outflows && $amt > 0 ? 'is-peak' : ''; ?>" style="--h: <?php echo ($amt / $max_outflows * 100); ?>%"></span>
+                    <?php endforeach; ?>
                 </div>
             </div>
             <div class="cell">
@@ -514,6 +530,9 @@ function category_icon($cat) {
 </div>
 
 <div id="toastContainer" class="toast-stack" aria-live="polite"></div>
+<script>
+    window.APEX_TOKEN = <?php echo json_encode(csrf_token()); ?>;
+</script>
 <script>
     const serverTransactions = <?php echo json_encode($transactions); ?>;
 </script>
