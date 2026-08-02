@@ -7,6 +7,8 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
+csrf_validate();
+
 $pdo = getDBConnection();
 if (!$pdo) {
     echo json_encode(['success' => false, 'error' => 'Database connection failed']);

@@ -15,10 +15,18 @@
     const editModal   = document.getElementById('editTxModal');
     const editForm    = document.getElementById('editTxForm');
     const editClose   = document.getElementById('editTxClose');
+    const addModal    = document.getElementById('addTxModal');
+    const addForm     = document.getElementById('addTxForm');
+    const addOpenBtn  = document.getElementById('addTxOpen');
+    const addClose    = document.getElementById('addTxClose');
 
     let activeFilter = 'all';
     let activeQuery  = '';
     let editType     = 'expense';
+    let addType      = 'expense';
+
+    // Per-request CSRF token. Server emits window.APEX_TOKEN in transactions.php.
+    const TOKEN = (typeof window.APEX_TOKEN === 'string') ? window.APEX_TOKEN : '';
 
     function toast(message, type) {
         if (typeof showToast === 'function') showToast(message, type);
@@ -86,6 +94,7 @@
 
         const formData = new FormData();
         formData.append('id', id);
+        if (TOKEN) formData.append('_token', TOKEN);
 
         try {
             const response = await fetch('api_delete_transaction.php', {
@@ -125,6 +134,7 @@
         formData.append('method', document.getElementById('editTxMethod').value.trim());
         formData.append('date', document.getElementById('editTxDate').value);
         formData.append('type', editType);
+        if (TOKEN) formData.append('_token', TOKEN);
 
         try {
             const response = await fetch('api_update_transaction.php', {
@@ -141,6 +151,86 @@
             }
         } catch (err) {
             toast('Error updating transaction.', 'error');
+        }
+    }
+
+    // ---- Add modal ----
+
+    function setAddType(type) {
+        addType = type === 'income' ? 'income' : 'expense';
+        const exp = document.getElementById('addTypeExpenseBtn');
+        const inc = document.getElementById('addTypeIncomeBtn');
+        if (!exp || !inc) return;
+        exp.className = addType === 'expense' ? 'is-on expense' : 'expense';
+        inc.className = addType === 'income' ? 'is-on income' : 'income';
+    }
+
+    function openAddModal() {
+        if (!addModal) return;
+        // Reset the form; default to now in local datetime format.
+        if (addForm) addForm.reset();
+        setAddType('expense');
+        const dt = document.getElementById('addTxDate');
+        if (dt && !dt.value) {
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            dt.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        }
+        addModal.classList.add('is-on');
+        addModal.setAttribute('aria-hidden', 'false');
+        setTimeout(() => {
+            const f = document.getElementById('addTxTitle');
+            if (f) f.focus();
+        }, 60);
+    }
+
+    function closeAddModal() {
+        if (!addModal) return;
+        addModal.classList.remove('is-on');
+        addModal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function submitAddTransaction(event) {
+        event.preventDefault();
+
+        const title = document.getElementById('addTxTitle').value.trim();
+        const amount = parseFloat(document.getElementById('addTxAmount').value);
+        const note = document.getElementById('addTxNote').value.trim();
+        const method = document.getElementById('addTxMethod').value.trim();
+        const category = document.getElementById('addTxCategory').value;
+        const date = document.getElementById('addTxDate').value;
+
+        if (!title || isNaN(amount) || amount <= 0) {
+            toast('Enter a valid title and a positive amount.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('amount', amount);
+        formData.append('category', category);
+        formData.append('method', method);
+        formData.append('note', note);
+        formData.append('date', date);
+        formData.append('type', addType);
+        if (TOKEN) formData.append('_token', TOKEN);
+
+        try {
+            const response = await fetch('api_add_transaction.php', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                toast(`Filed “${title}” successfully. Reloading…`, 'success');
+                closeAddModal();
+                setTimeout(() => location.reload(), 800);
+            } else {
+                toast(`Failed: ${result.error}`, 'error');
+            }
+        } catch (err) {
+            toast('Error saving transaction.', 'error');
         }
     }
 
@@ -179,8 +269,23 @@
         });
     }
 
+    if (addOpenBtn) addOpenBtn.addEventListener('click', openAddModal);
+    if (addClose) addClose.addEventListener('click', closeAddModal);
+    if (addForm) addForm.addEventListener('submit', submitAddTransaction);
+    document.querySelectorAll('[data-add-type]').forEach((btn) => {
+        btn.addEventListener('click', () => setAddType(btn.dataset.addType));
+    });
+    if (addModal) {
+        addModal.addEventListener('click', (e) => {
+            if (e.target === addModal) closeAddModal();
+        });
+    }
+
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeEditModal();
+        if (e.key === 'Escape') {
+            closeEditModal();
+            closeAddModal();
+        }
     });
 
     applyFilters();

@@ -11,7 +11,48 @@ if (session_status() === PHP_SESSION_NONE) {
     if (is_writable($sessionPath)) {
         session_save_path($sessionPath);
     }
+    session_set_cookie_params([
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'path'     => '/',
+    ]);
     session_start();
+}
+
+define('CSRF_FIELD', '_token');
+
+/**
+ * Return the per-session CSRF token, minting one if missing.
+ * Forms print it via <input type="hidden" name="_token" value="<?= csrf_token() ?>">.
+ * AJAX requests read it from the same field name in FormData,
+ * or from the X-CSRF-Token header.
+ */
+function csrf_token(): string {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Validate the CSRF token on the current request. Call at the top of every
+ * state-changing POST handler (forms and api_*.php). Halts on failure.
+ */
+function csrf_validate(): void {
+    $sent = $_POST[CSRF_FIELD] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+    if (!isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], (string) $sent)) {
+        http_response_code(403);
+        $isAjax = str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/api_')
+            || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
+        // The header above is fine for AJAX; for plain forms we also want a redirect:
+        if (!$isAjax) {
+            $_SESSION['flash_error'] = 'Session expired. Please try again.';
+            header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? 'login.php'));
+        }
+        exit;
+    }
 }
 
 // Database Credentials (Customize for your MySQL setup)

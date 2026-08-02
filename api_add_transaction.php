@@ -8,6 +8,8 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
+csrf_validate();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $amount = floatval($_POST['amount'] ?? 0);

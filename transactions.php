@@ -193,6 +193,10 @@ $categories = array_values(array_unique(array_merge($standardCategories, array_k
                     <span aria-hidden="true">·</span>
                     <span><span id="visibleCount"><?php echo $count; ?></span> of <?php echo $count; ?> entries</span>
                 </div>
+                <button type="button" class="submit" id="addTxOpen" style="width:auto; padding:10px 18px; margin-top:0;">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    <span>Add entry</span>
+                </button>
             </div>
 
             <div class="ledger">
@@ -283,6 +287,88 @@ $categories = array_values(array_unique(array_merge($standardCategories, array_k
     </main>
 </div>
 
+<div class="scrim" id="addTxModal" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-labelledby="addSheetTitle">
+        <div class="sheet-head">
+            <div>
+                <span class="kicker-num">§ 03</span>
+                <h3 id="addSheetTitle">Add entry</h3>
+            </div>
+            <button type="button" class="close" id="addTxClose" aria-label="Close">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div class="toggle-pair" role="tablist" aria-label="Transaction type">
+            <button type="button" id="addTypeExpenseBtn" class="is-on expense" data-add-type="expense">Expense</button>
+            <button type="button" id="addTypeIncomeBtn" class="income" data-add-type="income">Income</button>
+        </div>
+
+        <form id="addTxForm">
+            <div class="field">
+                <div class="field-row"><label for="addTxTitle">Merchant or note</label></div>
+                <div class="input-shell">
+                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                    <input type="text" id="addTxTitle" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-row"><label for="addTxNote">Detail note</label></div>
+                <div class="input-shell">
+                    <i class="fa-regular fa-note-sticky" aria-hidden="true"></i>
+                    <input type="text" id="addTxNote">
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="field">
+                    <div class="field-row"><label for="addTxAmount">Amount</label></div>
+                    <div class="input-shell">
+                        <i class="fa-solid fa-indian-rupee-sign" aria-hidden="true"></i>
+                        <input type="number" step="0.01" min="0.01" id="addTxAmount" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-row"><label for="addTxCategory">Category</label></div>
+                    <div class="input-shell">
+                        <i class="fa-solid fa-tag" aria-hidden="true"></i>
+                        <select id="addTxCategory">
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="field">
+                    <div class="field-row"><label for="addTxMethod">Payment method</label></div>
+                    <div class="input-shell">
+                        <i class="fa-regular fa-credit-card" aria-hidden="true"></i>
+                        <input type="text" id="addTxMethod">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-row"><label for="addTxDate">Date</label></div>
+                    <div class="input-shell">
+                        <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                        <input type="datetime-local" id="addTxDate" required>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit">
+                <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                <span>File entry</span>
+            </button>
+        </form>
+    </div>
+</div>
+
 <div class="scrim" id="editTxModal" aria-hidden="true">
     <div class="sheet" role="dialog" aria-labelledby="editSheetTitle">
         <div class="sheet-head">
@@ -368,6 +454,9 @@ $categories = array_values(array_unique(array_merge($standardCategories, array_k
 </div>
 
 <div id="toastContainer" class="toast-stack" aria-live="polite"></div>
+<script>
+    window.APEX_TOKEN = <?php echo json_encode(csrf_token()); ?>;
+</script>
 <script>
     const serverTransactions = <?php echo json_encode($transactions); ?>;
 </script>

@@ -8,6 +8,8 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
+csrf_validate();
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Invalid request']);
     exit;

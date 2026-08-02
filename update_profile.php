@@ -11,6 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user'])) {
     exit;
 }
 
+csrf_validate();
+
 $action = $_POST['action'] ?? '';
 $userId = (int) $_SESSION['user']['id'];
 $pdo = getDBConnection();

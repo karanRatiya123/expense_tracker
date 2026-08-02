@@ -210,6 +210,7 @@ $flashSuccess = getFlashMessage('success');
                     <h3 class="section-title">Basic information</h3>
                     <form class="profile-form" method="POST" action="update_profile.php" id="infoForm">
                         <input type="hidden" name="action" value="update_info">
+                        <input type="hidden" name="_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                         <div class="pf-field">
                             <label for="name">Full name</label>
                             <input id="name" name="name" type="text" value="<?= htmlspecialchars($user['name']) ?>" required minlength="2">
@@ -233,6 +234,7 @@ $flashSuccess = getFlashMessage('success');
                     <h3 class="section-title">Security</h3>
                     <form class="profile-form" method="POST" action="update_profile.php" id="pwForm">
                         <input type="hidden" name="action" value="change_password">
+                        <input type="hidden" name="_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                         <div class="pf-field">
                             <label for="old_password">Current password</label>
                             <input id="old_password" name="old_password" type="password" required autocomplete="current-password">

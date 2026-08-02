@@ -213,6 +213,7 @@ $initialTab = $_GET['tab'] ?? 'login';
         <!-- LOGIN -->
         <form class="auth-panel <?= $initialTab === 'login' ? 'active' : '' ?>" data-panel="login" method="POST" action="auth.php" novalidate>
             <input type="hidden" name="action" value="login">
+            <input type="hidden" name="_token" value="<?= htmlspecialchars(csrf_token()) ?>">
             <?php if ($loginError && $initialTab === 'login'): ?>
                 <div class="auth-msg error"><?= htmlspecialchars($loginError) ?></div>
             <?php endif; ?>
@@ -242,6 +243,7 @@ $initialTab = $_GET['tab'] ?? 'login';
         <!-- SIGNUP -->
         <form class="auth-panel <?= $initialTab === 'signup' ? 'active' : '' ?>" data-panel="signup" method="POST" action="auth.php" novalidate>
             <input type="hidden" name="action" value="signup">
+            <input type="hidden" name="_token" value="<?= htmlspecialchars(csrf_token()) ?>">
             <?php if ($signupError && $initialTab === 'signup'): ?>
                 <div class="auth-msg error"><?= htmlspecialchars($signupError) ?></div>
             <?php elseif ($signupSuccess): ?>
