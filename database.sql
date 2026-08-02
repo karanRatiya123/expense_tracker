@@ -26,6 +26,19 @@ CREATE TABLE IF NOT EXISTS transactions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS budgets (
+    id VARCHAR(50) PRIMARY KEY,
+    user_id INT NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    period_type VARCHAR(50) NOT NULL DEFAULT 'monthly',
+    start_date DATE,
+    end_date DATE,
+    thresholds JSON,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Insert demo user
 INSERT IGNORE INTO users (id, name, email, password, created_at) VALUES 
 (1, 'Alex Morgan', 'demo@apexspend.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '2026-07-28 10:00:00');
@@ -53,3 +66,5 @@ INSERT IGNORE INTO transactions (id, user_id, type, title, note, amount, categor
 ('tx_218', 1, 'expense', 'Cult Fitness', 'Monthly membership', 2500.00, 'Health & Medical', '2026-06-10 07:30:00', 'NEFT ··0019'),
 ('tx_219', 1, 'expense', 'Spotify', 'Premium, family plan', 299.00, 'Entertainment', '2026-06-05 09:00:00', 'RuPay ··2207'),
 ('tx_220', 1, 'expense', 'Manipal Hospital', 'Annual health check-up', 7800.00, 'Health & Medical', '2026-06-02 11:30:00', 'RuPay ··2207');
+
+

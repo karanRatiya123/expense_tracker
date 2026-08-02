@@ -88,13 +88,7 @@
   const STORAGE_KEY = 'apexspend.budgets.v1';
   const TODAY = new Date(DATA.demoDate + 'T00:00:00');
 
-  const DEFAULT_SEED = [
-    { category: 'Food & Dining',       amount: 15000, period: { type: 'monthly' } },
-    { category: 'Housing & Utilities', amount: 22500, period: { type: 'monthly' } },
-    { category: 'Shopping & Retail',   amount:  8000, period: { type: 'monthly' } },
-    { category: 'Transportation',      amount:  6000, period: { type: 'monthly' } },
-    { category: 'Entertainment',       amount:  3000, period: { type: 'monthly' } },
-  ];
+
 
   let budgets = [];
   let activePeriod = 'monthly';
@@ -121,35 +115,45 @@
   // ==========================================================================
   // Storage
   // ==========================================================================
-  function loadBudgets() {
-    let store;
+  async function fetchBudgets() {
     try {
-      store = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    } catch (e) { store = null; }
-
-    if (!store || typeof store !== 'object') {
-      store = { version: 1, firstRun: false, items: [] };
+      const res = await fetch('api_get_budgets.php');
+      const data = await res.json();
+      if (data.success) {
+        return { items: data.items };
+      }
+    } catch (e) {
+      console.error('Error fetching budgets:', e);
     }
-    if (!Array.isArray(store.items)) store.items = [];
-
-    if (store.items.length === 0 && !store.firstRun) {
-      // Seed defaults the very first time the user visits
-      store.items = DEFAULT_SEED.map((s) => ({
-        id: makeId(),
-        category: s.category,
-        amount: s.amount,
-        period: s.period,
-        thresholds: [75, 90, 100],
-        createdAt: new Date().toISOString(),
-      }));
-      store.firstRun = true;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-    }
-    return store;
+    return { items: [] };
   }
 
-  function saveStore() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, firstRun: budgets.firstRun, items: budgets.items }));
+  async function saveBudgetToDB(b) {
+    const fd = new FormData();
+    fd.append('id', b.id);
+    fd.append('category', b.category);
+    fd.append('amount', b.amount);
+    if (b.period) {
+      fd.append('period_type', b.period.type);
+      if (b.period.startDate) fd.append('start_date', b.period.startDate);
+      if (b.period.endDate) fd.append('end_date', b.period.endDate);
+    }
+    fd.append('thresholds', JSON.stringify(b.thresholds || [75, 90, 100]));
+    try {
+      await fetch('api_save_budget.php', { method: 'POST', body: fd });
+    } catch (e) {
+      console.error('Error saving budget:', e);
+    }
+  }
+
+  async function deleteBudgetFromDB(id) {
+    const fd = new FormData();
+    fd.append('id', id);
+    try {
+      await fetch('api_delete_budget.php', { method: 'POST', body: fd });
+    } catch (e) {
+      console.error('Error deleting budget:', e);
+    }
   }
 
   function makeId() {
@@ -162,27 +166,28 @@
     return id;
   }
 
-  function addBudget(rec) {
-    budgets.items.push(Object.assign({
+  async function addBudget(rec) {
+    const newB = Object.assign({
       id: makeId(),
       thresholds: [75, 90, 100],
       createdAt: new Date().toISOString(),
-    }, rec));
-    saveStore();
+    }, rec);
+    budgets.items.push(newB);
+    await saveBudgetToDB(newB);
   }
-  function updateBudget(id, patch) {
+  async function updateBudget(id, patch) {
     const idx = budgets.items.findIndex((b) => b.id === id);
     if (idx === -1) return;
     budgets.items[idx] = Object.assign({}, budgets.items[idx], patch);
-    saveStore();
+    await saveBudgetToDB(budgets.items[idx]);
     // Clear any threshold toasts for this budget so re-crossing re-fires
     for (const k of Array.from(firedToasts)) {
       if (k.indexOf(id + '_') === 0) firedToasts.delete(k);
     }
   }
-  function deleteBudget(id) {
+  async function deleteBudget(id) {
     budgets.items = budgets.items.filter((b) => b.id !== id);
-    saveStore();
+    await deleteBudgetFromDB(id);
     for (const k of Array.from(firedToasts)) {
       if (k.indexOf(id + '_') === 0) firedToasts.delete(k);
     }
@@ -489,7 +494,7 @@
     editingId = null;
   };
 
-  window.handleBudgetSave = function (e) {
+  window.handleBudgetSave = async function (e) {
     e.preventDefault();
     const category = document.getElementById('bCategory').value;
     const amount = parseFloat(document.getElementById('bAmount').value);
@@ -524,20 +529,20 @@
     const dedup = Array.from(new Set(thresholds)).sort((a, b) => a - b);
 
     if (editingId) {
-      updateBudget(editingId, { category, amount, period, thresholds: dedup });
+      await updateBudget(editingId, { category, amount, period, thresholds: dedup });
       showToast('Budget updated.', 'success');
     } else {
-      addBudget({ category, amount, period, thresholds: dedup });
+      await addBudget({ category, amount, period, thresholds: dedup });
       showToast('Budget saved.', 'success');
     }
     closeBudgetModal();
     render();
   };
 
-  window.handleBudgetDelete = function () {
+  window.handleBudgetDelete = async function () {
     if (!editingId) return;
     if (!confirm('Delete this budget? This cannot be undone.')) return;
-    deleteBudget(editingId);
+    await deleteBudget(editingId);
     showToast('Budget deleted.', 'info');
     closeBudgetModal();
     render();
@@ -578,8 +583,8 @@
   // ==========================================================================
   // Boot
   // ==========================================================================
-  document.addEventListener('DOMContentLoaded', () => {
-    budgets = loadBudgets();
+  document.addEventListener('DOMContentLoaded', async () => {
+    budgets = await fetchBudgets();
     render();
     wireEvents();
   });

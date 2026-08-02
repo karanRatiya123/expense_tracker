@@ -128,6 +128,29 @@
         if (heroSav) heroSav.textContent = formatINR(Math.max(0, k.income - k.expense));
     }
 
+    function setChartEmptyState(canvasId, isEmpty, msg) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const parent = canvas.parentElement;
+        if (isEmpty) {
+            canvas.style.display = 'none';
+            let emptyDiv = parent.querySelector('.chart-empty-state');
+            if (!emptyDiv) {
+                emptyDiv = document.createElement('div');
+                emptyDiv.className = 'chart-empty-state';
+                emptyDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:var(--whisper);text-align:center;padding:20px;font-family:var(--font-mono);font-size:0.9rem;position:absolute;top:0;left:0;right:0;bottom:0;';
+                parent.style.position = 'relative';
+                parent.appendChild(emptyDiv);
+            }
+            emptyDiv.textContent = msg;
+            emptyDiv.style.display = 'flex';
+        } else {
+            canvas.style.display = 'block';
+            const emptyDiv = parent.querySelector('.chart-empty-state');
+            if (emptyDiv) emptyDiv.style.display = 'none';
+        }
+    }
+
     // ----- Cash-flow line chart (re-renders on month change + granularity toggle) -----
     function renderCashFlowChart() {
         const el = document.getElementById('cashFlowChart');
@@ -136,6 +159,10 @@
         const labels = DATA.daily.map((d) => d.label);
         const income = DATA.daily.map((d) => d.income);
         const expense = DATA.daily.map((d) => d.expense);
+
+        const totalFlow = income.reduce((a, b) => a + b, 0) + expense.reduce((a, b) => a + b, 0);
+        setChartEmptyState('cashFlowChart', totalFlow === 0, 'No cash flow in this period.');
+        if (totalFlow === 0) return;
 
         const ctx = el.getContext('2d');
         const grad1 = ctx.createLinearGradient(0, 0, 0, 260);
@@ -233,6 +260,10 @@
         const labels = DATA.byDow.map((d) => d.label);
         const totals = DATA.byDow.map((d) => d.total);
 
+        const dTotal = totals.reduce((a, b) => a + b, 0);
+        setChartEmptyState('dayOfWeekChart', dTotal === 0, 'No daily outflow data found.');
+        if (dTotal === 0) return;
+
         charts.dow = new Chart(el, {
             type: 'bar',
             data: {
@@ -298,6 +329,14 @@
         const labels = DATA.byCategory.map((c) => c.name);
         const totals = DATA.byCategory.map((c) => c.total);
 
+        const cTotal = totals.reduce((a, b) => a + b, 0);
+        setChartEmptyState('outflowsByCategoryChart', cTotal === 0, 'No expenses to categorize.');
+        
+        const legend = document.getElementById('categoryLegend');
+        if (legend) legend.innerHTML = '';
+        
+        if (cTotal === 0) return;
+
         charts.category = new Chart(el, {
             type: 'doughnut',
             data: {
@@ -331,14 +370,11 @@
         });
 
         // Custom legend
-        const legend = document.getElementById('categoryLegend');
         if (legend) {
-            legend.innerHTML = '';
-            const total = totals.reduce((a, b) => a + b, 0);
             labels.forEach((name, i) => {
                 const row = document.createElement('li');
                 row.className = 'item';
-                const share = total > 0 ? (totals[i] / total * 100) : 0;
+                const share = cTotal > 0 ? (totals[i] / cTotal * 100) : 0;
                 row.innerHTML = `
                     <span class="swatch" style="background:${palette[i % palette.length]}"></span>
                     <span class="label">${escapeHtml(name)}</span>
@@ -356,6 +392,10 @@
 
         const labels = DATA.byMethod.map((m) => m.name);
         const totals = DATA.byMethod.map((m) => m.total);
+
+        const pTotal = totals.reduce((a, b) => a + b, 0);
+        setChartEmptyState('paymentMethodChart', pTotal === 0, 'No payment method data found.');
+        if (pTotal === 0) return;
 
         charts.method = new Chart(el, {
             type: 'bar',

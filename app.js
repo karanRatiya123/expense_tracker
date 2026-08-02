@@ -476,25 +476,51 @@ function getYearlyData() {
 function initCharts() {
     if (typeof Chart === 'undefined') return;
 
+    function setChartEmptyState(canvasId, isEmpty, msg) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const parent = canvas.parentElement;
+        if (isEmpty) {
+            canvas.style.display = 'none';
+            let emptyDiv = parent.querySelector('.chart-empty-state');
+            if (!emptyDiv) {
+                emptyDiv = document.createElement('div');
+                emptyDiv.className = 'chart-empty-state';
+                emptyDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:var(--whisper);text-align:center;padding:20px;font-family:var(--font-mono);font-size:0.9rem;position:absolute;top:0;left:0;right:0;bottom:0;';
+                parent.style.position = 'relative';
+                parent.appendChild(emptyDiv);
+            }
+            emptyDiv.textContent = msg;
+            emptyDiv.style.display = 'flex';
+        } else {
+            canvas.style.display = 'block';
+            const emptyDiv = parent.querySelector('.chart-empty-state');
+            if (emptyDiv) emptyDiv.style.display = 'none';
+        }
+    }
+
     Chart.defaults.font.family = "'Geist Mono', ui-monospace, monospace";
     Chart.defaults.font.size = 11;
     Chart.defaults.color = '#8a8a8a';
 
     const monthlyData = getMonthlyData();
+    const mTotal = monthlyData.income.reduce((a, b) => a + b, 0) + monthlyData.expense.reduce((a, b) => a + b, 0);
 
     const lineCtx = document.getElementById('incomeExpenseChart');
     if (lineCtx) {
-        const ctx = lineCtx.getContext('2d');
-
-        const grad1 = ctx.createLinearGradient(0, 0, 0, 260);
-        grad1.addColorStop(0, 'rgba(245, 158, 11, 0.35)');
-        grad1.addColorStop(1, 'rgba(245, 158, 11, 0)');
-
-        const grad2 = ctx.createLinearGradient(0, 0, 0, 260);
-        grad2.addColorStop(0, 'rgba(138, 138, 138, 0.25)');
-        grad2.addColorStop(1, 'rgba(138, 138, 138, 0)');
-
-        new Chart(lineCtx, {
+        setChartEmptyState('incomeExpenseChart', mTotal === 0, 'No activity in the last 6 months.');
+        if (mTotal > 0) {
+            const ctx = lineCtx.getContext('2d');
+    
+            const grad1 = ctx.createLinearGradient(0, 0, 0, 260);
+            grad1.addColorStop(0, 'rgba(245, 158, 11, 0.35)');
+            grad1.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    
+            const grad2 = ctx.createLinearGradient(0, 0, 0, 260);
+            grad2.addColorStop(0, 'rgba(138, 138, 138, 0.25)');
+            grad2.addColorStop(1, 'rgba(138, 138, 138, 0)');
+    
+            new Chart(lineCtx, {
             type: 'line',
             data: {
                 labels: monthlyData.labels,
@@ -570,16 +596,22 @@ function initCharts() {
                 }
             }
         });
+        }
     }
 
     const donutCtx = document.getElementById('categoryChart');
     if (donutCtx) {
-        new Chart(donutCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Food & Dining', 'Housing & Utilities', 'Shopping', 'Transport', 'Entertainment', 'Other'],
-                datasets: [{
-                    data: getCategoryData(),
+        const cData = getCategoryData();
+        const cTotal = cData.reduce((a, b) => a + b, 0);
+        setChartEmptyState('categoryChart', cTotal === 0, 'No expense data to categorize.');
+
+        if (cTotal > 0) {
+            new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Food & Dining', 'Housing & Utilities', 'Shopping', 'Transport', 'Entertainment', 'Other'],
+                    datasets: [{
+                        data: cData,
                     backgroundColor: [
                         '#f5f5f5',
                         '#f59e0b',
@@ -625,6 +657,7 @@ function initCharts() {
                 legend.appendChild(item);
             });
         }
+        }
     }
 }
 
@@ -653,6 +686,35 @@ let barChart = null;
 function initBarChart() {
     const el = document.getElementById('barIncomeExpenseChart');
     if (!el || typeof Chart === 'undefined') return;
+
+    function setChartEmptyState(canvasId, isEmpty, msg) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const parent = canvas.parentElement;
+        if (isEmpty) {
+            canvas.style.display = 'none';
+            let emptyDiv = parent.querySelector('.chart-empty-state');
+            if (!emptyDiv) {
+                emptyDiv = document.createElement('div');
+                emptyDiv.className = 'chart-empty-state';
+                emptyDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:var(--whisper);text-align:center;padding:20px;font-family:var(--font-mono);font-size:0.9rem;position:absolute;top:0;left:0;right:0;bottom:0;';
+                parent.style.position = 'relative';
+                parent.appendChild(emptyDiv);
+            }
+            emptyDiv.textContent = msg;
+            emptyDiv.style.display = 'flex';
+        } else {
+            canvas.style.display = 'block';
+            const emptyDiv = parent.querySelector('.chart-empty-state');
+            if (emptyDiv) emptyDiv.style.display = 'none';
+        }
+    }
+
+    const d = BAR_DATA.monthly;
+    const mTotal = d.income.reduce((a,b)=>a+b, 0) + d.expense.reduce((a,b)=>a+b, 0);
+    setChartEmptyState('barIncomeExpenseChart', mTotal === 0, 'No income or expense data found.');
+
+    if (mTotal === 0) return;
 
     barChart = new Chart(el, {
         type: 'bar',
@@ -756,14 +818,20 @@ function wireBarToggle() {
     });
 }
 
-function renderDashboardBudgets() {
+async function renderDashboardBudgets() {
     const grid = document.getElementById('dashboardBudgetsGrid');
     if (!grid) return;
 
-    let store;
+    let store = null;
     try {
-        store = JSON.parse(localStorage.getItem('apexspend.budgets.v1') || 'null');
-    } catch (e) { store = null; }
+        const response = await fetch('api_get_budgets.php');
+        const data = await response.json();
+        if (data.success) {
+            store = { items: data.items };
+        }
+    } catch (e) {
+        console.error('Failed to fetch budgets:', e);
+    }
     
     if (!store || !store.items || store.items.length === 0) {
         grid.innerHTML = '<p style="padding:20px;color:var(--whisper);">No budgets set. <a href="budgets.php" style="color:var(--foreground);">Create one →</a></p>';

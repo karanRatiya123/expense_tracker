@@ -18,8 +18,7 @@ if ($pdo) {
     if ($row = $stmt->fetch()) $user = array_merge($user, $row);
 
     $txCount = (int) $pdo->query("SELECT COUNT(*) FROM transactions WHERE user_id = $userId")->fetchColumn();
-    // budgets table doesn't exist yet — counts from transactions by category as a stand-in.
-    $budgetCount = (int) $pdo->query("SELECT COUNT(DISTINCT category) FROM transactions WHERE user_id = $userId")->fetchColumn();
+    $budgetCount = (int) $pdo->query("SELECT COUNT(*) FROM budgets WHERE user_id = $userId")->fetchColumn();
 } else {
     foreach ($_SESSION['users_db'] as $u) {
         if ((int) $u['id'] === $userId) {
