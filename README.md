@@ -1,5 +1,12 @@
 # Expense Tracker
 
+![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+
 A personal expense tracking dashboard built with PHP, Chart.js, and a GitHub-style contribution heatmap. Dark editorial aesthetic with Indian Rupee (₹) currency formatting.
 
 **Owner & maintainer:** [@karanRatiya123](https://github.com/karanRatiya123)
@@ -56,10 +63,15 @@ EXPENSE TRACKING WEBSITE/
 │   └── logout.php          Clears the PHP session
 │
 ├── Backend (PHP)
-│   ├── config.php          DB credentials + session bootstrap
-│   ├── auth.php            Login / signup / session check helpers
-│   ├── update_profile.php  Profile update endpoint
-│   └── api_add_transaction.php   AJAX endpoint for the add-transaction modal
+│   ├── config.php                DB credentials + session bootstrap
+│   ├── auth.php                  Login / signup / session check helpers
+│   ├── update_profile.php        Profile update endpoint
+│   ├── api_add_transaction.php   AJAX endpoint for adding transactions
+│   ├── api_update_transaction.php AJAX endpoint for updating transactions
+│   ├── api_delete_transaction.php AJAX endpoint for deleting transactions
+│   ├── api_get_budgets.php       AJAX endpoint for fetching budgets
+│   ├── api_save_budget.php       AJAX endpoint for saving budgets
+│   └── api_delete_budget.php     AJAX endpoint for deleting budgets
 │
 ├── Frontend (JavaScript, per-page)
 │   ├── app.js              Dashboard: heatmap, KPI sparklines, shared helpers
@@ -92,6 +104,11 @@ Ranked by what actually breaks if the file is wrong or missing.
 | `database.sql` | Source of truth for the MySQL schema. No DB = no data. |
 | `auth.php` | Login / signup / `require_login()` guard used across pages. |
 | `api_add_transaction.php` | The only path for the add-transaction modal to persist data. |
+| `api_update_transaction.php` | Endpoint for updating existing transactions. |
+| `api_delete_transaction.php` | Endpoint for deleting transactions. |
+| `api_get_budgets.php` | API endpoint for fetching budgets data. |
+| `api_save_budget.php` | Endpoint for saving budget allocations. |
+| `api_delete_budget.php` | Endpoint for deleting budget allocations. |
 | `update_profile.php` | Handles every profile-field save. |
 | `style.css` | Single source of design tokens — removing it strips all theming. |
 
@@ -118,6 +135,8 @@ Ranked by what actually breaks if the file is wrong or missing.
 | `profile.php` | Secondary view; same. |
 | `logout.php` | One-line session destroy. |
 | `script.js` | Legacy toast helper — kept for backward compatibility. |
+| `README.md` | Project documentation and setup guide. |
+| `.gitignore` | Excludes unnecessary files from version control. |
 
 ---
 
