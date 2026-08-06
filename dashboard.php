@@ -73,13 +73,48 @@ $max_outflows = max($monthly_outflows) ?: 1;
 $income_trend = $income_last_month > 0 ? (($income_this_month - $income_last_month) / $income_last_month) * 100 : ($income_this_month > 0 ? 100 : 0);
 $outflows_trend = $outflows_last_month > 0 ? (($outflows_this_month - $outflows_last_month) / $outflows_last_month) * 100 : ($outflows_this_month > 0 ? 100 : 0);
 
+// Retrieve goals from session or database
+$savings_goal = 50000.00;
+$run_rate_target = 1000000.00;
+
+if (isset($_SESSION['user']['savings_goal'])) {
+    $savings_goal = (float) $_SESSION['user']['savings_goal'];
+}
+if (isset($_SESSION['user']['run_rate_target'])) {
+    $run_rate_target = (float) $_SESSION['user']['run_rate_target'];
+}
+
+if ($pdo) {
+    // Ensure columns exist (safeguard)
+    try {
+        $pdo->query("SELECT savings_goal, run_rate_target FROM users LIMIT 1");
+    } catch (PDOException $e) {
+        try {
+            $pdo->exec("ALTER TABLE users ADD COLUMN savings_goal DECIMAL(15,2) DEFAULT 50000.00");
+            $pdo->exec("ALTER TABLE users ADD COLUMN run_rate_target DECIMAL(15,2) DEFAULT 1000000.00");
+        } catch (PDOException $e2) {}
+    }
+    
+    $stmt = $pdo->prepare("SELECT savings_goal, run_rate_target FROM users WHERE id = ?");
+    $stmt->execute([$user['id']]);
+    $user_goals = $stmt->fetch();
+    if ($user_goals) {
+        if (!is_null($user_goals['savings_goal'])) {
+            $savings_goal = (float) $user_goals['savings_goal'];
+            $_SESSION['user']['savings_goal'] = $savings_goal;
+        }
+        if (!is_null($user_goals['run_rate_target'])) {
+            $run_rate_target = (float) $user_goals['run_rate_target'];
+            $_SESSION['user']['run_rate_target'] = $run_rate_target;
+        }
+    }
+}
+
 $saved_this_month = $income_this_month - $outflows_this_month;
-$savings_goal = 50000;
-$savings_progress = min(100, max(0, ($saved_this_month / $savings_goal) * 100));
+$savings_progress = $savings_goal > 0 ? min(100, max(0, ($saved_this_month / $savings_goal) * 100)) : 0;
 
 $run_rate_annual = $income_this_month * 12;
-$run_rate_target = 1000000;
-$run_rate_progress = min(100, max(0, ($run_rate_annual / $run_rate_target) * 100));
+$run_rate_progress = $run_rate_target > 0 ? min(100, max(0, ($run_rate_annual / $run_rate_target) * 100)) : 0;
 
 function format_inr($n) {
     return number_format((float)$n, 2, '.', ',');
@@ -230,6 +265,9 @@ function category_icon($cat) {
             </div>
             <div class="cell">
                 <div class="cell-num">03</div>
+                <button type="button" class="cell-edit-btn" onclick="openGoalsModal()" aria-label="Edit savings goal">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
                 <div class="label">Saved this month</div>
                 <div class="figure"><span class="currency">₹</span><span id="totalSavings"><?php echo format_inr($saved_this_month); ?></span></div>
                 <div class="meta"><span class="trend <?php echo $saved_this_month >= 0 ? 'up' : 'down'; ?>"><?php echo number_format($savings_progress, 0); ?>%</span><span>of goal</span></div>
@@ -243,6 +281,9 @@ function category_icon($cat) {
             </div>
             <div class="cell">
                 <div class="cell-num">04</div>
+                <button type="button" class="cell-edit-btn" onclick="openGoalsModal()" aria-label="Edit annual target">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
                 <div class="label">Run-rate, annual</div>
                 <div class="figure"><span class="currency">₹</span><span><?php echo format_inr($run_rate_annual); ?></span></div>
                 <div class="meta"><span class="trend <?php echo $run_rate_progress >= 100 ? 'up' : 'down'; ?>"><?php echo number_format($run_rate_progress, 1); ?>%</span><span>projection</span></div>
@@ -524,6 +565,44 @@ function category_icon($cat) {
             <button type="submit" class="submit">
                 <i class="fa-solid fa-feather" aria-hidden="true"></i>
                 <span>File entry</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- =================== EDIT GOALS MODAL =================== -->
+<div class="scrim" id="goalsModal" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-labelledby="goalsSheetTitle">
+        <div class="sheet-head">
+            <div>
+                <span class="kicker-num">§ 04</span>
+                <h3 id="goalsSheetTitle">Set Financial Goals</h3>
+            </div>
+            <button type="button" class="close" onclick="closeGoalsModal()" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form id="goalsForm" onsubmit="handleUpdateGoals(event)">
+            <div class="field">
+                <div class="field-row"><label for="goalSavings">Monthly Savings Goal (₹)</label></div>
+                <div class="input-shell">
+                    <i class="fa-solid fa-indian-rupee-sign" aria-hidden="true"></i>
+                    <input type="number" step="0.01" id="goalSavings" value="<?php echo htmlspecialchars($savings_goal); ?>" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-row"><label for="goalRunRate">Annual Run-rate Target (₹)</label></div>
+                <div class="input-shell">
+                    <i class="fa-solid fa-indian-rupee-sign" aria-hidden="true"></i>
+                    <input type="number" step="0.01" id="goalRunRate" value="<?php echo htmlspecialchars($run_rate_target); ?>" required>
+                </div>
+            </div>
+
+            <button type="submit" class="submit">
+                <i class="fa-regular fa-floppy-disk" aria-hidden="true"></i>
+                <span>Save Goals</span>
             </button>
         </form>
     </div>

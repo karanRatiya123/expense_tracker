@@ -118,5 +118,49 @@ if ($action === 'change_password') {
     exit;
 }
 
+// ---- UPDATE GOALS ----
+if ($action === 'update_goals') {
+    $savings_goal = floatval($_POST['savings_goal'] ?? 0);
+    $run_rate_target = floatval($_POST['run_rate_target'] ?? 0);
+
+    if ($savings_goal <= 0 || $run_rate_target <= 0) {
+        $_SESSION['flash_error'] = 'Goals must be positive numbers.';
+        header('Location: profile.php');
+        exit;
+    }
+
+    if ($pdo) {
+        // Ensure columns exist (safeguard)
+        try {
+            $pdo->query("SELECT savings_goal, run_rate_target FROM users LIMIT 1");
+        } catch (PDOException $e) {
+            try {
+                $pdo->exec("ALTER TABLE users ADD COLUMN savings_goal DECIMAL(15,2) DEFAULT 50000.00");
+                $pdo->exec("ALTER TABLE users ADD COLUMN run_rate_target DECIMAL(15,2) DEFAULT 1000000.00");
+            } catch (PDOException $e2) {}
+        }
+
+        apply_user_update($pdo, $userId, ['savings_goal' => $savings_goal, 'run_rate_target' => $run_rate_target]);
+    }
+
+    $_SESSION['user']['savings_goal'] = $savings_goal;
+    $_SESSION['user']['run_rate_target'] = $run_rate_target;
+
+    if (isset($_SESSION['users_db'])) {
+        foreach ($_SESSION['users_db'] as &$u) {
+            if ((int)$u['id'] === $userId) {
+                $u['savings_goal'] = $savings_goal;
+                $u['run_rate_target'] = $run_rate_target;
+                break;
+            }
+        }
+        unset($u);
+    }
+
+    $_SESSION['flash_success'] = 'Financial goals updated.';
+    header('Location: profile.php');
+    exit;
+}
+
 header('Location: profile.php');
 exit;

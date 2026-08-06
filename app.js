@@ -28,6 +28,24 @@ function closeModal() {
     m.setAttribute('aria-hidden', 'true');
 }
 
+function openGoalsModal() {
+    const m = document.getElementById('goalsModal');
+    if (!m) return;
+    m.classList.add('is-on');
+    m.setAttribute('aria-hidden', 'false');
+    setTimeout(() => {
+        const f = document.getElementById('goalSavings');
+        if (f) f.focus();
+    }, 60);
+}
+
+function closeGoalsModal() {
+    const m = document.getElementById('goalsModal');
+    if (!m) return;
+    m.classList.remove('is-on');
+    m.setAttribute('aria-hidden', 'true');
+}
+
 function setTxType(type) {
     currentType = type;
     const exp = document.getElementById('typeExpenseBtn');
@@ -85,6 +103,39 @@ async function handleAddTransaction(e) {
         }
     } catch (err) {
         showToast('Error saving transaction.', 'error');
+    }
+}
+
+async function handleUpdateGoals(e) {
+    e.preventDefault();
+    const savingsGoal = parseFloat(document.getElementById('goalSavings').value);
+    const runRateTarget = parseFloat(document.getElementById('goalRunRate').value);
+
+    if (isNaN(savingsGoal) || savingsGoal <= 0 || isNaN(runRateTarget) || runRateTarget <= 0) {
+        showToast('Goals must be positive numbers.', 'error');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('savings_goal', savingsGoal);
+    formData.append('run_rate_target', runRateTarget);
+    formData.append('_token', window.APEX_TOKEN || '');
+
+    try {
+        const response = await fetch('api_update_goals.php', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Goals updated successfully. Reloading...', 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showToast(`Failed to update goals: ${result.error}`, 'error');
+        }
+    } catch (err) {
+        showToast('Error updating goals.', 'error');
     }
 }
 

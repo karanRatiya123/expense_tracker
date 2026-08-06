@@ -659,6 +659,33 @@ input, select, textarea {
 
 .kpi .cell:hover { background: var(--mist); }
 
+.kpi .cell .cell-edit-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--muted-text);
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0.35;
+    transition: opacity var(--transition), color var(--transition), background-color var(--transition);
+    padding: 6px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kpi .cell:hover .cell-edit-btn {
+    opacity: 1;
+}
+
+.kpi .cell .cell-edit-btn:hover {
+    color: var(--ink);
+    background: var(--line);
+}
+
 .kpi .cell-num {
     font-family: var(--mono);
     font-size: 10px;

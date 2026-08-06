@@ -13,7 +13,17 @@ $activePage = 'profile';
 
 // Hydrate full record (DB has created_at + avatar_path; session store is the source in fallback).
 if ($pdo) {
-    $stmt = $pdo->prepare('SELECT id, name, email, avatar_path, created_at FROM users WHERE id = ?');
+    // Ensure columns exist (safeguard)
+    try {
+        $pdo->query("SELECT savings_goal, run_rate_target FROM users LIMIT 1");
+    } catch (PDOException $e) {
+        try {
+            $pdo->exec("ALTER TABLE users ADD COLUMN savings_goal DECIMAL(15,2) DEFAULT 50000.00");
+            $pdo->exec("ALTER TABLE users ADD COLUMN run_rate_target DECIMAL(15,2) DEFAULT 1000000.00");
+        } catch (PDOException $e2) {}
+    }
+
+    $stmt = $pdo->prepare('SELECT id, name, email, avatar_path, savings_goal, run_rate_target, created_at FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     if ($row = $stmt->fetch()) $user = array_merge($user, $row);
 
@@ -24,6 +34,8 @@ if ($pdo) {
         if ((int) $u['id'] === $userId) {
             if (!isset($u['created_at'])) $u['created_at'] = date('Y-m-d H:i:s');
             if (!isset($u['avatar_path'])) $u['avatar_path'] = null;
+            if (!isset($u['savings_goal'])) $u['savings_goal'] = 50000.00;
+            if (!isset($u['run_rate_target'])) $u['run_rate_target'] = 1000000.00;
             $user = array_merge($user, $u);
             break;
         }
@@ -31,6 +43,9 @@ if ($pdo) {
     $txCount = 6;       // matches the seeded ledger rows
     $budgetCount = 5;   // matches the seeded budget categories
 }
+
+$savings_goal = isset($user['savings_goal']) ? (float)$user['savings_goal'] : 50000.00;
+$run_rate_target = isset($user['run_rate_target']) ? (float)$user['run_rate_target'] : 1000000.00;
 
 $initials = strtoupper(substr($user['name'], 0, 1));
 $createdAt = $user['created_at'] ?? date('Y-m-d H:i:s');
@@ -249,6 +264,25 @@ $flashSuccess = getFlashMessage('success');
                         </div>
                         <div class="pf-actions">
                             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-shield-halved"></i>&nbsp; Update password</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="card profile-card">
+                    <h3 class="section-title">Financial Goals</h3>
+                    <form class="profile-form" method="POST" action="update_profile.php" id="goalsForm">
+                        <input type="hidden" name="action" value="update_goals">
+                        <input type="hidden" name="_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                        <div class="pf-field">
+                            <label for="savings_goal">Monthly Savings Goal (₹)</label>
+                            <input id="savings_goal" name="savings_goal" type="number" step="0.01" value="<?= htmlspecialchars($savings_goal) ?>" required>
+                        </div>
+                        <div class="pf-field">
+                            <label for="run_rate_target">Annual Run-rate Target (₹)</label>
+                            <input id="run_rate_target" name="run_rate_target" type="number" step="0.01" value="<?= htmlspecialchars($run_rate_target) ?>" required>
+                        </div>
+                        <div class="pf-actions">
+                            <button type="submit" class="btn btn-primary"><i class="fa-regular fa-floppy-disk"></i>&nbsp; Save goals</button>
                         </div>
                     </form>
                 </section>
