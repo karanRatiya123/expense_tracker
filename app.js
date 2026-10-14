@@ -199,8 +199,14 @@ function wireFilters() {
 // SPENDING HEATMAP — GitHub-style 12-month contribution grid
 // ============================================================
 
-// GitHub dark contribution greens
-const HEATMAP_LEVELS = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];
+// GitHub contribution greens — dark + light palettes (light = GitHub default greens)
+const HEATMAP_LEVELS_DARK = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];
+const HEATMAP_LEVELS_LIGHT = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
+function heatmapPalette() {
+    return (document.documentElement.getAttribute('data-theme') === 'light')
+        ? HEATMAP_LEVELS_LIGHT : HEATMAP_LEVELS_DARK;
+}
+const HEATMAP_LEVELS = HEATMAP_LEVELS_DARK;
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // In-memory day store: { 'YYYY-MM-DD': { total, count } }
@@ -208,9 +214,11 @@ const heatmapData = {};
 
 // Generate the last ~12 months of plausible data so the heatmap looks lived-in.
 function seedHeatmapData() {
+    const memberFilter = (typeof window !== 'undefined' && window.heatmapMemberFilter) || 'all';
     if (typeof serverTransactions !== 'undefined' && Array.isArray(serverTransactions)) {
         serverTransactions.forEach(t => {
             if (t.type === 'expense') {
+                if (memberFilter !== 'all' && String(t.user_id ?? '') !== String(memberFilter)) return;
                 const d = new Date(t.date.replace(' ', 'T'));
                 if (isNaN(d.getTime())) return;
                 
@@ -242,9 +250,30 @@ function levelFor(total) {
     return 4;                       // ₹32,500+
 }
 
+// Relative scaling (family page): levels spread across the actual max day,
+// so small household amounts still show visible variation.
+function levelForTotal(total) {
+    if (total <= 0) return 0;
+    if (typeof window !== 'undefined' && window.heatmapRelative) {
+        let max = 0;
+        for (const k in heatmapData) {
+            if (heatmapData[k].total > max) max = heatmapData[k].total;
+        }
+        if (max <= 0) return 0;
+        const r = total / max;
+        if (r < 0.25) return 1;
+        if (r < 0.50) return 2;
+        if (r < 0.75) return 3;
+        return 4;
+    }
+    return levelFor(total);
+}
+
 // Build the heatmap DOM — GitHub contribution graph layout:
 //   rows = Sun→Sat, columns = weeks, left labels = Mon / Wed / Fri only
 function buildHeatmap() {
+    // Reset so member-filter switches and reloads never stack stale days.
+    for (const k in heatmapData) delete heatmapData[k];
     seedHeatmapData();
 
     const grid   = document.getElementById('heatmapGrid');
@@ -298,12 +327,12 @@ function buildHeatmap() {
 
             const key   = isoDate(cellDate);
             const entry = heatmapData[key] || { total: 0, count: 0 };
-            const lvl   = entry.total === 0 ? 0 : levelFor(entry.total);
+            const lvl   = levelForTotal(entry.total);
 
             const cell = document.createElement('a');
             cell.className = 'hm-cell';
             cell.href = 'analytics.php?date=' + encodeURIComponent(key);
-            cell.style.background = HEATMAP_LEVELS[lvl];
+            cell.style.background = heatmapPalette()[lvl];
             cell.dataset.date  = key;
             cell.dataset.total = entry.total;
             cell.dataset.count = entry.count;
@@ -440,7 +469,7 @@ function updateHeatmapDay(dateObj, addedAmount) {
     const newCount  = prevCount + 1;
     cell.dataset.total = newTotal;
     cell.dataset.count = newCount;
-    cell.style.background = HEATMAP_LEVELS[newTotal === 0 ? 0 : levelFor(newTotal)];
+    cell.style.background = heatmapPalette()[newTotal === 0 ? 0 : levelFor(newTotal)];
     heatmapData[key] = { total: newTotal, count: newCount };
 }
 
@@ -935,6 +964,15 @@ document.addEventListener('DOMContentLoaded', () => {
     initBarChart();
     wireBarToggle();
     renderDashboardBudgets();
+
+    // Repaint heatmap cells when the theme changes (dark <-> light).
+    window.addEventListener('apex-theme-change', () => {
+        const pal = heatmapPalette();
+        document.querySelectorAll('.hm-cell[data-date]').forEach((cell) => {
+            const total = parseFloat(cell.dataset.total || '0');
+            cell.style.background = pal[total === 0 ? 0 : levelFor(total)];
+        });
+    });
 
     const scrim = document.getElementById('txModal');
     if (scrim) {

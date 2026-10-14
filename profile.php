@@ -60,86 +60,108 @@ $flashSuccess = getFlashMessage('success');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="dark">
+    <meta name="color-scheme" content="dark light">
+    <script>(function(){try{var m=localStorage.getItem('apex-theme')||'dark';var r=m==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):m;document.documentElement.setAttribute('data-theme',r);document.documentElement.setAttribute('data-theme-mode',m);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
     <title>ApexSpend — Profile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+    <script src="theme.js?v=<?php echo time(); ?>"></script>
     <style>
+        /* Compact profile layout — no long scroll */
+        .canvas .masthead { margin-bottom: 1.5rem; padding-bottom: 1.25rem; }
         .profile-grid {
             display: grid;
-            grid-template-columns: 1fr 1.4fr;
-            gap: 1.25rem;
+            grid-template-columns: 300px minmax(0, 1fr);
+            gap: 1rem;
+            align-items: start;
         }
+        .profile-right {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            align-items: start;
+            min-width: 0;
+        }
+        @media (max-width: 1150px) { .profile-right { grid-template-columns: 1fr; } }
         @media (max-width: 880px) { .profile-grid { grid-template-columns: 1fr; } }
 
-        .profile-card { padding: 1.5rem; }
+        .profile-card {
+            padding: 1.15rem 1.2rem;
+            background: var(--paper-card);
+            border: var(--hairline);
+            border-radius: 2px;
+            min-width: 0;
+        }
+        .profile-card.is-sticky { position: sticky; top: 1rem; }
+        @media (max-width: 880px) { .profile-card.is-sticky { position: static; } }
         .avatar-xl {
-            width: 96px; height: 96px;
+            width: 68px; height: 68px;
             border-radius: 50%;
             display: grid; place-items: center;
-            font-family: var(--font-serif);
-            font-size: 2.4rem;
+            font-family: var(--serif);
+            font-size: 1.7rem;
             font-style: italic;
-            color: var(--card);
-            background: linear-gradient(135deg, var(--chart-1), var(--chart-2));
-            margin-bottom: 1rem;
+            color: #000;
+            background: var(--tangerine);
+            margin-bottom: .7rem;
         }
-        .profile-name { margin: 0 0 .15rem; font-size: 1.4rem; }
-        .profile-email { margin: 0 0 1rem; color: var(--muted-foreground); font-size: .9rem; }
-        .meta-list { list-style: none; padding: 0; margin: 1rem 0 0; }
+        .profile-name { margin: 0 0 .15rem; font-size: 1.25rem; line-height: 1.2; overflow-wrap: anywhere; }
+        .profile-email { margin: 0 0 .75rem; color: var(--muted-text); font-size: .85rem; overflow-wrap: anywhere; }
+        .meta-list { list-style: none; padding: 0; margin: .75rem 0 0; }
         .meta-list li {
-            display: flex; justify-content: space-between; align-items: baseline;
-            padding: .55rem 0; border-top: 1px dashed var(--border);
-            font-size: .9rem;
+            display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+            padding: .5rem 0; border-top: 1px dashed var(--line);
+            font-size: .85rem;
         }
         .meta-list li:first-child { border-top: 0; }
-        .meta-list .k { color: var(--muted-foreground); }
-        .meta-list .v { font-family: var(--font-mono); }
+        .meta-list .k { color: var(--muted-text); white-space: nowrap; }
+        .meta-list .v { font-family: var(--mono); text-align: right; }
 
-        .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin: 1rem 0 0; }
+        .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin: .75rem 0 0; }
         .stat {
-            background: var(--muted);
-            border-radius: var(--radius);
-            padding: .85rem;
+            background: var(--mist);
+            border: var(--hairline);
+            padding: .6rem .4rem;
             text-align: center;
         }
-        .stat .n { font-family: var(--font-serif); font-size: 1.6rem; line-height: 1; }
-        .stat .l { font-size: .7rem; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: .04em; margin-top: .25rem; }
+        .stat .n { font-family: var(--mono); font-weight: 600; font-size: 1.25rem; line-height: 1; }
+        .stat .l { font-size: .65rem; color: var(--muted-text); text-transform: uppercase; letter-spacing: .06em; margin-top: .25rem; }
 
-        .section-title { font-family: var(--font-serif); font-style: italic; font-size: 1.1rem; margin: 0 0 .75rem; }
-        form.profile-form { display: grid; gap: .75rem; }
-        .pf-field { display: grid; gap: .3rem; }
-        .pf-field label { font-size: .8rem; color: var(--muted-foreground); }
+        .section-title { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 1.25rem; margin: 0 0 .7rem; padding-bottom: .55rem; border-bottom: var(--hairline); }
+        form.profile-form { display: grid; gap: .6rem; }
+        .pf-field { display: grid; gap: .3rem; min-width: 0; }
+        .pf-field label { font-family: var(--mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted-text); }
         .pf-field input {
-            padding: .6rem .75rem; font: inherit; color: var(--foreground);
-            background: var(--input); border: 1px solid var(--border);
-            border-radius: var(--radius); outline: none;
+            width: 100%; padding: .55rem .65rem; font-size: .9rem; color: var(--ink);
+            background: transparent; border: var(--hairline-strong);
+            border-radius: 2px; outline: none;
         }
-        .pf-field input:focus { border-color: var(--ring); }
-        .pf-field input[readonly] { opacity: .7; cursor: default; }
-        .pf-actions { display: flex; gap: .5rem; }
+        .pf-field input:focus { border-color: var(--tangerine); }
+        .pf-field input[readonly] { opacity: .6; cursor: default; }
+        .pf-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .15rem; }
         .btn {
-            font: inherit; font-weight: 500; cursor: pointer;
-            padding: .55rem 1rem; border-radius: var(--radius); border: 1px solid var(--border);
-            background: var(--card); color: var(--foreground);
+            font-family: var(--mono); font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+            cursor: pointer; padding: .6rem 1rem; border-radius: 999px; border: var(--hairline-strong);
+            background: transparent; color: var(--ink);
         }
-        .btn-primary { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+        .btn-primary { background: var(--tangerine); color: #000; border-color: var(--tangerine); }
         .btn-ghost { background: transparent; }
 
         .flash {
-            padding: .6rem .85rem; border-radius: var(--radius);
-            font-size: .9rem; margin-bottom: 1rem;
+            padding: .6rem .85rem; border: var(--hairline);
+            font-size: .85rem; margin-bottom: 1rem;
         }
-        .flash.error { background: rgb(255 99 99 / .12); color: var(--destructive); }
-        .flash.success { background: rgb(80 200 120 / .12); color: #4ade80; }
+        .flash.error { background: rgb(255 99 99 / .12); color: var(--loss); }
+        .flash.success { background: rgb(80 200 120 / .12); color: var(--gain); }
 
-        .pref-row { display: flex; justify-content: space-between; align-items: center; padding: .55rem 0; border-top: 1px dashed var(--border); }
+        .pref-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .5rem 0; border-top: 1px dashed var(--line); }
         .pref-row:first-of-type { border-top: 0; }
-        .pref-row .k { font-size: .9rem; }
-        .pref-row .v { color: var(--muted-foreground); font-size: .85rem; font-family: var(--font-mono); }
+        .pref-row .k { font-size: .85rem; }
+        .pref-row .v { color: var(--muted-text); font-size: .8rem; font-family: var(--mono); text-align: right; }
+        .theme-hint { margin: .45rem 0 0; font-size: .72rem; color: var(--muted-text); font-family: var(--mono); }
     </style>
 </head>
 <body>
@@ -161,6 +183,7 @@ $flashSuccess = getFlashMessage('success');
                 <li><a href="transactions.php" class="<?= $activePage==='ledger' ? 'is-active' : '' ?>"><i class="fa-solid fa-receipt nav-ic"></i><span class="label">Ledger</span></a></li>
                 <li><a href="analytics.php" class="<?= $activePage==='analytics' ? 'is-active' : '' ?>"><i class="fa-solid fa-chart-pie nav-ic"></i><span class="label">Analytics</span></a></li>
                 <li><a href="budgets.php" class="<?= $activePage==='budgets' ? 'is-active' : '' ?>"><i class="fa-solid fa-bullseye nav-ic"></i><span class="label">Budgets</span></a></li>
+                <li><a href="family.php" class="<?= $activePage==='family' ? 'is-active' : '' ?>"><i class="fa-solid fa-users nav-ic"></i><span class="label">Family <span class="lock-tag" title="Locked"><i class="fa-solid fa-lock"></i></span></span></a></li>
                 <li><a href="profile.php" class="<?= $activePage==='profile' ? 'is-active' : '' ?>"><i class="fa-solid fa-user nav-ic"></i><span class="label">Profile</span></a></li>
             </ul>
         </div>
@@ -200,7 +223,7 @@ $flashSuccess = getFlashMessage('success');
         <div class="profile-grid">
 
             <!-- LEFT: identity card -->
-            <section class="card profile-card">
+            <section class="profile-card is-sticky">
                 <div class="avatar-xl"><?= htmlspecialchars($initials) ?></div>
                 <h2 class="profile-name"><?= htmlspecialchars($user['name']) ?></h2>
                 <p class="profile-email"><?= htmlspecialchars($user['email']) ?></p>
@@ -218,10 +241,10 @@ $flashSuccess = getFlashMessage('success');
                 </div>
             </section>
 
-            <!-- RIGHT: forms + prefs -->
-            <div style="display:grid; gap:1.25rem;">
+            <!-- RIGHT: forms + prefs — 2-up so the page fits without long scroll -->
+            <div class="profile-right">
 
-                <section class="card profile-card">
+                <section class="profile-card">
                     <h3 class="section-title">Basic information</h3>
                     <form class="profile-form" method="POST" action="update_profile.php" id="infoForm">
                         <input type="hidden" name="action" value="update_info">
@@ -245,7 +268,7 @@ $flashSuccess = getFlashMessage('success');
                     </form>
                 </section>
 
-                <section class="card profile-card">
+                <section class="profile-card">
                     <h3 class="section-title">Security</h3>
                     <form class="profile-form" method="POST" action="update_profile.php" id="pwForm">
                         <input type="hidden" name="action" value="change_password">
@@ -268,7 +291,7 @@ $flashSuccess = getFlashMessage('success');
                     </form>
                 </section>
 
-                <section class="card profile-card">
+                <section class="profile-card">
                     <h3 class="section-title">Financial Goals</h3>
                     <form class="profile-form" method="POST" action="update_profile.php" id="goalsForm">
                         <input type="hidden" name="action" value="update_goals">
@@ -287,10 +310,16 @@ $flashSuccess = getFlashMessage('success');
                     </form>
                 </section>
 
-                <section class="card profile-card">
+                <section class="profile-card">
                     <h3 class="section-title">Preferences</h3>
                     <div class="pref-row"><span class="k">Currency</span><span class="v">₹ · INR (locked)</span></div>
-                    <div class="pref-row"><span class="k">Theme</span><span class="v">Dark (default)</span></div>
+                    <div class="pref-row"><span class="k">Theme</span><span class="v" id="themeStatus">Dark</span></div>
+                    <div class="theme-switch" role="radiogroup" aria-label="Color theme">
+                        <button type="button" data-theme-option="dark" role="radio" aria-checked="false"><i class="fa-solid fa-moon"></i>Dark</button>
+                        <button type="button" data-theme-option="light" role="radio" aria-checked="false"><i class="fa-solid fa-sun"></i>Light</button>
+                        <button type="button" data-theme-option="system" role="radio" aria-checked="false"><i class="fa-solid fa-desktop"></i>System</button>
+                    </div>
+                    <p class="theme-hint">System follows your OS setting and updates automatically.</p>
                     <div class="pref-row"><span class="k">Date format</span><span class="v">DD MMM YYYY</span></div>
                 </section>
 
@@ -300,6 +329,6 @@ $flashSuccess = getFlashMessage('success');
     </main>
 </div>
 
-<script src="profile.js"></script>
+<script src="profile.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

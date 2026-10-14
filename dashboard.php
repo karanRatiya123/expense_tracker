@@ -138,7 +138,8 @@ function category_icon($cat) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="dark">
+    <meta name="color-scheme" content="dark light">
+    <script>(function(){try{var m=localStorage.getItem('apex-theme')||'dark';var r=m==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):m;document.documentElement.setAttribute('data-theme',r);document.documentElement.setAttribute('data-theme-mode',m);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
     <title>ApexSpend — The Ledger</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -146,6 +147,7 @@ function category_icon($cat) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+    <script src="theme.js?v=<?php echo time(); ?>"></script>
 </head>
 <body>
 
@@ -182,6 +184,10 @@ function category_icon($cat) {
                 <li><a href="budgets.php" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-bullseye nav-ic" aria-hidden="true"></i>
                     <span class="label">Budgets</span>
+                </a></li>
+                <li><a href="family.php" class="<?php echo $activePage==='family' ? 'is-active' : ''; ?>">
+                    <i class="fa-solid fa-users nav-ic" aria-hidden="true"></i>
+                    <span class="label">Family <span class="lock-tag" title="Locked"><i class="fa-solid fa-lock" aria-hidden="true"></i></span></span>
                 </a></li>
                 <li><a href="profile.php" class="<?php echo $activePage==='settings' || $activePage==='profile' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-user nav-ic" aria-hidden="true"></i>

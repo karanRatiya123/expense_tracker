@@ -41,6 +41,31 @@ CREATE TABLE IF NOT EXISTS budgets (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- ============================================================
+--  Family Space — added later, additive only (no change to
+--  users / transactions / budgets, existing data preserved)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS families (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    invite_code VARCHAR(10) NOT NULL UNIQUE,
+    created_by INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS family_members (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    family_id VARCHAR(50) NOT NULL,
+    user_id INT NOT NULL,
+    role ENUM('admin','member') NOT NULL DEFAULT 'member',
+    status ENUM('active','pending','rejected') NOT NULL DEFAULT 'active',
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_family_user (family_id, user_id),
+    FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Insert demo user
 INSERT IGNORE INTO users (id, name, email, password, created_at) VALUES 
 (1, 'Alex Morgan', 'demo@apexspend.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '2026-07-28 10:00:00');
