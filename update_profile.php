@@ -5,6 +5,7 @@
  * Writes to MySQL when available, falls back to $_SESSION['users_db'] (same pattern as auth.php).
  */
 require_once 'config.php';
+require_once 'includes/mailer.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user'])) {
     header('Location: login.php');
@@ -88,7 +89,9 @@ if ($action === 'update_info') {
     $_SESSION['user']['name'] = $name;
     $_SESSION['user']['email'] = $email;
     $_SESSION['flash_success'] = 'Profile updated.';
+
     header('Location: profile.php');
+    defer_notification_email('profile_updated', ['name' => $name, 'email' => $email]);
     exit;
 }
 
@@ -114,7 +117,9 @@ if ($action === 'change_password') {
     $newHash = password_hash($new, PASSWORD_BCRYPT);
     apply_user_update($pdo, $userId, ['password' => $newHash]);
     $_SESSION['flash_success'] = 'Password changed.';
+
     header('Location: profile.php');
+    defer_notification_email('password_changed');
     exit;
 }
 

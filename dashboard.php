@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once __DIR__ . '/includes/welcome.php';
 
 if (!isset($_SESSION['user'])) {
     header('Location: login.php');
@@ -11,9 +12,12 @@ $initials = strtoupper(substr($user['name'], 0, 1));
 $activePage = 'overview';
 
 $pdo = getDBConnection();
-$stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC");
-$stmt->execute([$user['id']]);
-$transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$transactions = [];
+if ($pdo) {
+    $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC");
+    $stmt->execute([$user['id']]);
+    $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 $current_month = date('m');
 $current_year = date('Y');
@@ -108,7 +112,14 @@ if ($pdo) {
             $_SESSION['user']['run_rate_target'] = $run_rate_target;
         }
     }
+
+    // Keep the email-notification preference in the session for the mail path.
+    require_once __DIR__ . '/includes/email_prefs.php';
+    $_SESSION['user']['email_notifications'] = email_notifications_enabled($pdo, (int) $user['id']) ? 1 : 0;
 }
+
+// One-time onboarding card for brand-new accounts only.
+$showWelcome = ($pdo && apex_needs_welcome($pdo, (int) $user['id']));
 
 $saved_this_month = $income_this_month - $outflows_this_month;
 $savings_progress = $savings_goal > 0 ? min(100, max(0, ($saved_this_month / $savings_goal) * 100)) : 0;
@@ -243,6 +254,59 @@ function category_icon($cat) {
                 </div>
             </div>
         </header>
+
+        <!-- =================== WELCOME CARD (new accounts, shown once) =================== -->
+        <?php if ($showWelcome): ?>
+        <section class="welcome" id="welcomeCard" aria-labelledby="welcomeTitle">
+            <div class="welcome-head">
+                <div class="welcome-copy">
+                    <div class="kicker">
+                        <span class="kicker-num">§ 00</span>
+                        <span class="kicker-text">New here</span>
+                    </div>
+                    <h2 id="welcomeTitle">Welcome to ApexSpend, <em><?php echo htmlspecialchars(explode(' ', $user['name'])[0]); ?></em>.</h2>
+                    <p>Three things to set up before your first full month of tracking.</p>
+                </div>
+                <button type="button" class="welcome-dismiss" id="welcomeDismiss">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i>
+                    <span>Got it</span>
+                </button>
+            </div>
+
+            <div class="welcome-steps">
+                <div class="welcome-step">
+                    <span class="welcome-num">01</span>
+                    <div class="welcome-step-copy">
+                        <h3><i class="fa-solid fa-receipt" aria-hidden="true"></i> Add your first entry</h3>
+                        <p>Record an expense or income — the ledger does the rest.</p>
+                    </div>
+                    <button type="button" class="welcome-action" onclick="openModal()">
+                        Add entry <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="welcome-step">
+                    <span class="welcome-num">02</span>
+                    <div class="welcome-step-copy">
+                        <h3><i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Set a budget</h3>
+                        <p>Monthly limits with 75 / 90 / 100% alerts.</p>
+                    </div>
+                    <a class="welcome-action" href="budgets.php">
+                        Open budgets <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="welcome-step">
+                    <span class="welcome-num">03</span>
+                    <div class="welcome-step-copy">
+                        <h3><i class="fa-solid fa-people-roof" aria-hidden="true"></i> Create a family space</h3>
+                        <p>Share the ledger with family using an invite code.</p>
+                    </div>
+                    <a class="welcome-action" href="family.php">
+                        Create space <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+        <?php endif; ?>
 
         <!-- =================== KPI ROW + MINI BAR CHARTS =================== -->
         <section class="kpi" aria-label="Key figures">
@@ -623,5 +687,43 @@ function category_icon($cat) {
 </script>
 <script src="script.js?v=<?php echo time(); ?>"></script>
 <script src="app.js?v=<?php echo time(); ?>"></script>
+<script>
+(function () {
+    const card = document.getElementById('welcomeCard');
+    const button = document.getElementById('welcomeDismiss');
+    if (!card || !button) return;
+
+    button.addEventListener('click', async function () {
+        button.disabled = true;
+        try {
+            const body = new FormData();
+            body.append('_token', window.APEX_TOKEN);
+
+            const res = await fetch('api_dismiss_welcome.php', {
+                method: 'POST',
+                body,
+                headers: { 'X-CSRF-Token': window.APEX_TOKEN }
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || 'Could not dismiss the welcome card.');
+            }
+
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(-6px)';
+            setTimeout(() => card.remove(), 260);
+
+            if (typeof showToast === 'function') {
+                showToast('Welcome aboard!', 'success');
+            }
+        } catch (err) {
+            button.disabled = false;
+            if (typeof showToast === 'function') {
+                showToast(err.message, 'error');
+            }
+        }
+    });
+})();
+</script>
 </body>
 </html>

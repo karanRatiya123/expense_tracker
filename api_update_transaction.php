@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once 'includes/mailer.php';
 
 header('Content-Type: application/json');
 
@@ -58,6 +59,15 @@ $success = $stmt->execute([$type, $title, $note, $amount, $category, $date, $met
 
 if ($success) {
     echo json_encode(['success' => true]);
+
+    defer_notification_email('transaction_updated', [
+        'title'    => $title,
+        'amount'   => $amount,
+        'category' => $category,
+        'method'   => $method,
+        'type'     => $type,
+        'note'     => $note,
+    ]);
 } else {
     echo json_encode(['success' => false, 'error' => 'Failed to update transaction']);
 }

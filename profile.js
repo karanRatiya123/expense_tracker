@@ -66,4 +66,65 @@
   });
 
   paintThemeButtons(currentMode());
+
+  // ----- Email notifications toggle -----
+  function profileToast(message, type) {
+    let stack = document.querySelector('.toast-stack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.className = 'toast-stack';
+      document.body.appendChild(stack);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + (type || 'info');
+    const icon = document.createElement('i');
+    icon.className = 'fa-solid ' + (type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check');
+    icon.setAttribute('aria-hidden', 'true');
+    const text = document.createElement('span');
+    text.textContent = message;
+    toast.append(icon, text);
+    stack.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(6px)';
+      setTimeout(() => toast.remove(), 250);
+    }, 3200);
+  }
+
+  const emailToggle = document.getElementById('emailToggle');
+  if (emailToggle) {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    const token = meta ? meta.getAttribute('content') : '';
+
+    emailToggle.addEventListener('change', () => {
+      const enabled = emailToggle.checked;
+      const previous = !enabled;
+      emailToggle.disabled = true;
+
+      const fd = new FormData();
+      fd.append('enabled', enabled ? '1' : '0');
+      fd.append('_token', token);
+
+      fetch('api_toggle_email.php', {
+        method: 'POST',
+        body: fd,
+        headers: {
+          'X-CSRF-Token': token,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+        .then((res) => res.json().catch(() => ({ success: false, error: 'Unexpected server response' })))
+        .then((data) => {
+          if (!data.success) throw new Error(data.error || 'Could not update preference');
+          profileToast(enabled ? 'Email notifications turned on' : 'Email notifications turned off', 'success');
+        })
+        .catch((err) => {
+          emailToggle.checked = previous;
+          profileToast(err.message || 'Could not update preference', 'error');
+        })
+        .finally(() => {
+          emailToggle.disabled = false;
+        });
+    });
+  }
 })();

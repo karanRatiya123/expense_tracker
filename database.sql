@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     avatar_path VARCHAR(255) DEFAULT NULL,
+    email_notifications TINYINT(1) NOT NULL DEFAULT 1,
+    welcome_seen TINYINT(1) NOT NULL DEFAULT 0,
     savings_goal DECIMAL(15,2) DEFAULT 50000.00,
     run_rate_target DECIMAL(15,2) DEFAULT 1000000.00,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP

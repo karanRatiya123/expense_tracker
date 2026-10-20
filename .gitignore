@@ -10,6 +10,9 @@ Screenshot 2026-07-28 200114.png
 *.bak
 *.tmp
 .sessions/
+composer.phar
+mail_credentials.php
+vendor/
 
 # Editor / OS
 .vscode/

@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once 'includes/mailer.php';
 
 header('Content-Type: application/json');
 
@@ -55,7 +56,13 @@ try {
     $mem = $pdo->prepare("INSERT INTO family_members (family_id, user_id, role, status) VALUES (?, ?, 'admin', 'active')");
     $mem->execute([$famId, $_SESSION['user']['id']]);
     $pdo->commit();
+
     echo json_encode(['success' => true, 'family_id' => $famId, 'name' => $name, 'invite_code' => $code]);
+
+    defer_notification_email('family_created', [
+        'name'        => $name,
+        'invite_code' => $code,
+    ]);
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();

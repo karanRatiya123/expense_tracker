@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once 'includes/mailer.php';
 
 header('Content-Type: application/json');
 
@@ -37,6 +38,11 @@ try {
         $familyId = $row['family_id'];
     }
 
+    // Capture the family name before the row disappears.
+    $famRow = $pdo->prepare('SELECT name FROM families WHERE id = ?');
+    $famRow->execute([$familyId]);
+    $familyName = $famRow->fetchColumn() ?: null;
+
     $del = $pdo->prepare('DELETE FROM family_members WHERE family_id = ? AND user_id = ?');
     $del->execute([$familyId, $userId]);
 
@@ -48,6 +54,10 @@ try {
     }
 
     echo json_encode(['success' => true]);
+
+    if ($del->rowCount() > 0) {
+        defer_notification_email('family_left', ['name' => $familyName ?: 'Your Family']);
+    }
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'error' => 'Could not leave family, please retry']);
 }

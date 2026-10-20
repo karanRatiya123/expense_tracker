@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once 'includes/mailer.php';
 
 header('Content-Type: application/json');
 
@@ -46,7 +47,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmtBg->execute([$bgId, $userId, $category, 5000, 'monthly', '[75,90,100]']);
             }
         }
+
         echo json_encode(['success' => true]);
+
+        defer_notification_email('transaction_added', [
+            'title'    => $title,
+            'amount'   => $amount,
+            'category' => $category,
+            'method'   => $method,
+            'type'     => $type,
+            'note'     => $note,
+        ]);
     } else {
         echo json_encode(['success' => false, 'error' => 'Failed to save transaction']);
     }

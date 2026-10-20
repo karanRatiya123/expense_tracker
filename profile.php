@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once 'includes/email_prefs.php';
 
 if (!isset($_SESSION['user'])) {
     header('Location: login.php');
@@ -47,6 +48,14 @@ if ($pdo) {
 $savings_goal = isset($user['savings_goal']) ? (float)$user['savings_goal'] : 50000.00;
 $run_rate_target = isset($user['run_rate_target']) ? (float)$user['run_rate_target'] : 1000000.00;
 
+$emailNotif = 1;
+if ($pdo) {
+    $emailNotif = email_notifications_enabled($pdo, $userId) ? 1 : 0;
+} else {
+    $emailNotif = isset($user['email_notifications']) ? (int) $user['email_notifications'] : 1;
+}
+$_SESSION['user']['email_notifications'] = $emailNotif;
+
 $initials = strtoupper(substr($user['name'], 0, 1));
 $createdAt = $user['created_at'] ?? date('Y-m-d H:i:s');
 $memberSince = date('F Y', strtotime($createdAt));
@@ -61,6 +70,7 @@ $flashSuccess = getFlashMessage('success');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="dark light">
+    <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token()) ?>">
     <script>(function(){try{var m=localStorage.getItem('apex-theme')||'dark';var r=m==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):m;document.documentElement.setAttribute('data-theme',r);document.documentElement.setAttribute('data-theme-mode',m);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
     <title>ApexSpend — Profile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -312,6 +322,18 @@ $flashSuccess = getFlashMessage('success');
 
                 <section class="profile-card">
                     <h3 class="section-title">Preferences</h3>
+
+                    <div class="pref-row">
+                        <span class="k">Email notifications
+                            <span class="pref-sub">Receipts for transactions, budgets, family and account changes</span>
+                        </span>
+                        <label class="switch" title="Email notifications">
+                            <input type="checkbox" id="emailToggle" <?= $emailNotif ? 'checked' : '' ?>>
+                            <span class="switch-track" aria-hidden="true"></span>
+                            <span class="sr-only">Email notifications</span>
+                        </label>
+                    </div>
+
                     <div class="pref-row"><span class="k">Currency</span><span class="v">₹ · INR (locked)</span></div>
                     <div class="pref-row"><span class="k">Theme</span><span class="v" id="themeStatus">Dark</span></div>
                     <div class="theme-switch" role="radiogroup" aria-label="Color theme">

@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once 'includes/mailer.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user'])) {
@@ -46,3 +47,11 @@ if ($exists) {
 }
 
 echo json_encode(['success' => true]);
+
+defer_notification_email('budget_saved', [
+    'category'    => $category,
+    'amount'      => $amount,
+    'period_type' => $periodType,
+    'thresholds'  => $thresholds,
+    'is_new'      => !$exists,
+]);

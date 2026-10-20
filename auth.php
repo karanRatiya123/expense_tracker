@@ -4,6 +4,9 @@
  * POST-only. Uses DB if available, else session-backed store (see config.php).
  */
 require_once 'config.php';
+require_once 'includes/email_prefs.php';
+require_once 'includes/mailer.php';
+require_once 'includes/welcome.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: login.php');
@@ -41,7 +44,15 @@ if ($action === 'signup') {
             header('Location: login.php?tab=signup');
             exit;
         }
-        $ins = $pdo->prepare('INSERT INTO users (name, email, password) VALUES (?, ?, ?)');
+        // Prepare the welcome flag before inserting so the column is guaranteed
+        // to exist (and existing accounts are already marked as seen).
+        $welcomeReady = apex_welcome_ready($pdo);
+
+        if ($welcomeReady) {
+            $ins = $pdo->prepare('INSERT INTO users (name, email, password, welcome_seen) VALUES (?, ?, ?, 0)');
+        } else {
+            $ins = $pdo->prepare('INSERT INTO users (name, email, password) VALUES (?, ?, ?)');
+        }
         $ins->execute([$name, $email, $hash]);
     } else {
         foreach ($_SESSION['users_db'] as $u) {
@@ -56,12 +67,14 @@ if ($action === 'signup') {
             'name' => $name,
             'email' => $email,
             'password' => $hash,
+            'welcome_seen' => 0,
             'created_at' => date('Y-m-d H:i:s'),
         ];
     }
 
     $_SESSION['flash_success'] = 'Account created. Sign in to continue.';
     header('Location: login.php?tab=login');
+    queue_welcome_email($name, $email);   // flushes the redirect, email goes out after
     exit;
 }
 
@@ -99,6 +112,7 @@ if ($action === 'login') {
     }
 
     session_regenerate_id(true);
+    $user['email_notifications'] = ($pdo && !email_notifications_enabled($pdo, (int) $user['id'])) ? 0 : 1;
     $_SESSION['user'] = $user;
     header('Location: dashboard.php');
     exit;

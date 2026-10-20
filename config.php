@@ -62,11 +62,38 @@ define('DB_PASS', '');
 define('DB_NAME', 'apexspend_db');
 define('ENABLE_RECAPS', false);
 
+// ─── Email notifications (Gmail SMTP) ─────────────────────────────
+// 1. Turn on 2-Step Verification on the Google account.
+// 2. Create an App Password: https://myaccount.google.com/apppasswords
+// 3. Put the address + 16-character password in mail_credentials.php
+//    (untracked by git) or set APEX_MAIL_USER / APEX_MAIL_PASS.
+// Until credentials are filled in, notification calls return instantly.
+if (is_file(__DIR__ . '/mail_credentials.php')) {
+    require_once __DIR__ . '/mail_credentials.php';
+}
+
+if (!defined('MAIL_ENABLED'))  define('MAIL_ENABLED', true);
+if (!defined('MAIL_HOST'))     define('MAIL_HOST', 'smtp.gmail.com');
+if (!defined('MAIL_PORT'))     define('MAIL_PORT', 587);
+if (!defined('MAIL_USERNAME')) define('MAIL_USERNAME', getenv('APEX_MAIL_USER') ?: 'YOUR_EMAIL@gmail.com');
+if (!defined('MAIL_PASSWORD')) define('MAIL_PASSWORD', getenv('APEX_MAIL_PASS') ?: '');
+if (!defined('MAIL_FROM_NAME')) define('MAIL_FROM_NAME', 'ApexSpend');
+if (!defined('MAIL_TIMEOUT'))  define('MAIL_TIMEOUT', 8); // seconds — stops a bad network hanging the UI
+
 /**
  * Get Database Connection (PDO)
  * Falls back gracefully if MySQL is not available yet
  */
 function getDBConnection() {
+    // One connection per request — avoids paying for (and holding) extra
+    // sockets when several helpers ask for the DB.
+    static $pdo = null;
+    static $attempted = false;
+    if ($attempted) {
+        return $pdo;
+    }
+    $attempted = true;
+
     try {
         $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -74,6 +101,7 @@ function getDBConnection() {
         ]);
         return $pdo;
     } catch (PDOException $e) {
+        $pdo = null;
         return null; // Null fallback triggers Session Storage Mode for quick testing
     }
 }

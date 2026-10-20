@@ -227,6 +227,80 @@ html[data-theme="light"] .toggle-pair button.is-on.expense { color: #fff; }
 .theme-switch button.is-on i { color: var(--tangerine); }
 html[data-theme="light"] .theme-switch button.is-on i { color: #f59e0b; }
 
+/* ===== Settings toggle switch (Profile → Preferences) ===== */
+.switch {
+    position: relative;
+    display: inline-flex;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+.switch input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+.switch-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: var(--mist);
+    border: var(--hairline-strong);
+    transition: background var(--transition), border-color var(--transition);
+}
+.switch-track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--whisper);
+    transition: transform var(--transition), background var(--transition);
+}
+.switch input:checked + .switch-track {
+    background: var(--tangerine);
+    border-color: var(--tangerine);
+}
+.switch input:checked + .switch-track::after {
+    transform: translateX(20px);
+    background: #000;
+}
+.switch input:focus-visible + .switch-track {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+.switch input:disabled {
+    cursor: wait;
+}
+.switch input:disabled + .switch-track {
+    opacity: .6;
+}
+.pref-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: .72rem;
+    line-height: 1.4;
+    color: var(--muted-text);
+}
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* ===== Tailwind-style theme inline mapping ===== */
 @theme inline {
     --color-card: var(--card);
@@ -723,6 +797,189 @@ input, select, textarea {
 .actions .add:hover {
     background: #fbbf24;
     transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   Welcome Card — first-run onboarding (shown once)
+   ========================================================================== */
+
+.welcome {
+    position: relative;
+    margin: 0 0 24px;
+    border: var(--hairline);
+    border-top: 2px solid var(--tangerine);
+    background: linear-gradient(180deg, var(--mist), var(--paper-card) 62%);
+    overflow: hidden;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.welcome-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 26px 28px 22px;
+    border-bottom: var(--hairline);
+}
+
+.welcome-copy h2 {
+    margin: 10px 0 6px;
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+}
+
+.welcome-copy h2 em {
+    font-style: italic;
+    color: var(--tangerine);
+}
+
+.welcome-copy p {
+    margin: 0;
+    max-width: 56ch;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted-text);
+}
+
+.welcome-dismiss {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: var(--hairline-strong);
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.welcome-dismiss:hover {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+}
+
+.welcome-dismiss:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.welcome-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.welcome-step {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px 28px 24px;
+    border-right: var(--hairline);
+}
+
+.welcome-step:last-child {
+    border-right: 0;
+}
+
+.welcome-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--tangerine);
+}
+
+.welcome-step-copy h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.welcome-step-copy h3 i {
+    font-size: 13px;
+    color: var(--tangerine);
+}
+
+.welcome-step-copy p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted-text);
+}
+
+.welcome-action {
+    margin-top: auto;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: var(--hairline-strong);
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.welcome-action:hover {
+    border-color: var(--tangerine);
+    background: var(--tangerine);
+    color: #000;
+}
+
+.welcome-action i {
+    font-size: 9px;
+}
+
+@media (max-width: 900px) {
+    .welcome-steps {
+        grid-template-columns: 1fr;
+    }
+
+    .welcome-step {
+        border-right: 0;
+        border-bottom: var(--hairline);
+    }
+
+    .welcome-step:last-child {
+        border-bottom: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .welcome-head {
+        flex-direction: column;
+        padding: 22px 20px 18px;
+    }
+
+    .welcome-copy h2 {
+        font-size: 25px;
+    }
+
+    .welcome-step {
+        padding: 20px;
+    }
 }
 
 /* ==========================================================================

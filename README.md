@@ -21,6 +21,8 @@ A personal expense tracking dashboard built with PHP, Chart.js, and a GitHub-sty
 - **Analytics** — monthly trend (line) and category breakdown (doughnut)
 - **Budget tracking** — 5 categories with color-coded progress bars
 - **Editable ledger** — filterable transaction list with add-transaction modal and AJAX submit
+- **Email notifications** — automatic Gmail receipts for transactions, budgets, family and account changes (per-user toggle)
+- **New-user onboarding** — one-time welcome email at signup plus a dashboard card linking to the first three setup steps
 - **Auth + profile** — login, signup, profile update, session-based logout
 - **Default dark mode** — OKLCH-themed, hairline rules, no shadows
 
@@ -38,8 +40,19 @@ A personal expense tracking dashboard built with PHP, Chart.js, and a GitHub-sty
 1. Drop the folder into `xampp/htdocs/`.
 2. Start Apache + MySQL from the XAMPP control panel.
 3. Import `database.sql` into MySQL to create the schema.
-4. Open `http://localhost/EXPENSE%20TRACKING%20WEBSITE/`.
-5. Sign up or log in — the dashboard renders once authenticated.
+   - Upgrading an existing install? Also run `migration_email.sql` (adds the email toggle column; safe to re-run).
+4. Install the mail dependency: `composer install` (creates `vendor/`).
+5. Add Gmail SMTP credentials: copy your Gmail address + 16-character App Password into `mail_credentials.php` (git-ignored):
+   ```php
+   define('MAIL_USERNAME', 'you@gmail.com');
+   define('MAIL_PASSWORD', 'abcdefghijklmnop');
+   ```
+   Emails are skipped until both are set. `APEX_MAIL_USER` / `APEX_MAIL_PASS` env vars also work.
+6. Open `http://localhost/EXPENSE%20TRACKING%20WEBSITE/`.
+7. Sign up or log in — the dashboard renders once authenticated.
+
+> Notification emails are sent *after* the HTTP response is flushed, so a slow
+> SMTP round-trip (Gmail takes several seconds) never delays the UI.
 
 ## Currency
 
@@ -64,14 +77,22 @@ EXPENSE TRACKING WEBSITE/
 │
 ├── Backend (PHP)
 │   ├── config.php                DB credentials + session bootstrap
+│   ├── mail_credentials.php      Gmail address + App Password (git-ignored)
 │   ├── auth.php                  Login / signup / session check helpers
 │   ├── update_profile.php        Profile update endpoint
+│   ├── api_toggle_email.php      Email notification preference toggle
+│   ├── api_dismiss_welcome.php   Dismisses the one-time welcome card
 │   ├── api_add_transaction.php   AJAX endpoint for adding transactions
 │   ├── api_update_transaction.php AJAX endpoint for updating transactions
 │   ├── api_delete_transaction.php AJAX endpoint for deleting transactions
 │   ├── api_get_budgets.php       AJAX endpoint for fetching budgets
 │   ├── api_save_budget.php       AJAX endpoint for saving budgets
-│   └── api_delete_budget.php     AJAX endpoint for deleting budgets
+│   ├── api_delete_budget.php     AJAX endpoint for deleting budgets
+│   └── includes
+│       ├── mailer.php            Sends notification emails (PHPMailer + guards)
+│       ├── email_templates.php   HTML email templates for every event
+│       ├── email_prefs.php       Per-user email preference helpers
+│       └── welcome.php           One-time welcome-card helpers (auto-migration)
 │
 ├── Frontend (JavaScript, per-page)
 │   ├── app.js              Dashboard: heatmap, KPI sparklines, shared helpers
@@ -110,6 +131,10 @@ Ranked by what actually breaks if the file is wrong or missing.
 | `api_save_budget.php` | Endpoint for saving budget allocations. |
 | `api_delete_budget.php` | Endpoint for deleting budget allocations. |
 | `update_profile.php` | Handles every profile-field save. |
+| `includes/mailer.php` | Single send path for all notification emails; fails safe when SMTP is unset. |
+| `includes/email_templates.php` | All HTML email bodies — a broken template kills the notification, not the action. |
+| `includes/email_prefs.php` | Adds/reads the `email_notifications` preference column. |
+| `includes/welcome.php` | Adds/reads the one-time `welcome_seen` flag; marks existing accounts as seen. |
 | `style.css` | Single source of design tokens — removing it strips all theming. |
 
 ### High (core user experience)

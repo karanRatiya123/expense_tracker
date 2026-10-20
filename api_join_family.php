@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once 'includes/mailer.php';
 
 header('Content-Type: application/json');
 
@@ -47,7 +48,10 @@ if ($existing->fetch()) {
 try {
     $ins = $pdo->prepare("INSERT INTO family_members (family_id, user_id, role, status) VALUES (?, ?, 'member', 'active')");
     $ins->execute([$family['id'], $userId]);
+
     echo json_encode(['success' => true, 'family_id' => $family['id'], 'name' => $family['name']]);
+
+    defer_notification_email('family_joined', ['name' => $family['name']]);
 } catch (PDOException $e) {
     // Race: membership appeared between check and insert (unique key).
     echo json_encode(['success' => true, 'already' => true, 'family_id' => $family['id'], 'name' => $family['name']]);
