@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once __DIR__ . '/includes/categories.php';
 require_once __DIR__ . '/includes/welcome.php';
 
 if (!isset($_SESSION['user'])) {
@@ -131,18 +132,10 @@ function format_inr($n) {
     return number_format((float)$n, 2, '.', ',');
 }
 
-function category_icon($cat) {
-    $map = [
-        'Food & Dining' => 'fa-utensils',
-        'Housing & Utilities' => 'fa-bolt',
-        'Shopping & Retail' => 'fa-bag-shopping',
-        'Transportation' => 'fa-car',
-        'Entertainment' => 'fa-film',
-        'Income' => 'fa-money-bill-wave',
-        'Health & Medical' => 'fa-briefcase-medical',
-    ];
-    return $map[$cat] ?? 'fa-receipt';
-}
+// Categories come from the DB via the shared helper (auto-migrates + seeds).
+apex_load_category_registry($pdo, $user['id']);
+$apexCategories = apex_get_categories($pdo, $user['id']);
+$category_names = array_column($apexCategories, 'name');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -195,6 +188,10 @@ function category_icon($cat) {
                 <li><a href="budgets.php" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-bullseye nav-ic" aria-hidden="true"></i>
                     <span class="label">Budgets</span>
+                </a></li>
+                <li><a href="categories.php" class="<?php echo $activePage==='categories' ? 'is-active' : ''; ?>">
+                    <i class="fa-solid fa-tags nav-ic" aria-hidden="true"></i>
+                    <span class="label">Categories</span>
                 </a></li>
                 <li><a href="family.php" class="<?php echo $activePage==='family' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-users nav-ic" aria-hidden="true"></i>
@@ -509,10 +506,9 @@ function category_icon($cat) {
                 <div class="filters" role="tablist" aria-label="Filter by category">
                     <button class="is-on" data-filter="all">All</button>
                     <button data-filter="income">Income</button>
-                    <button data-filter="Food & Dining">Food & Dining</button>
-                    <button data-filter="Housing & Utilities">Housing & Utilities</button>
-                    <button data-filter="Entertainment">Entertainment</button>
-                    <button data-filter="Transportation">Transportation</button>
+                    <?php foreach ($category_names as $cn): if ($cn === 'Income') continue; ?>
+                        <button data-filter="<?php echo htmlspecialchars($cn); ?>"><?php echo htmlspecialchars($cn); ?></button>
+                    <?php endforeach; ?>
                 </div>
 
                 <div class="led-grid head" aria-hidden="true">
@@ -543,7 +539,7 @@ function category_icon($cat) {
                     <div class="led-grid" data-category="<?php echo htmlspecialchars($t['category']); ?>">
                         <span class="when"><span class="day"><?php echo date('d M', strtotime($t['date'])); ?></span><?php echo date('H:i', strtotime($t['date'])); ?></span>
                         <span class="col-merch"><strong><?php echo htmlspecialchars($t['title']); ?></strong> <?php echo htmlspecialchars($t['note']); ?></span>
-                        <span class="cat"><i class="fa-solid <?php echo category_icon($t['category']); ?>" aria-hidden="true"></i> <?php echo htmlspecialchars($t['category']); ?></span>
+                        <span class="cat"><i class="fa-solid <?php echo apex_category_icon($t['category']); ?>" aria-hidden="true"></i> <?php echo htmlspecialchars($t['category']); ?></span>
                         <span class="method"><?php echo htmlspecialchars($t['method']); ?></span>
                         <span class="amount-wrap">
                             <span class="<?php echo $cls; ?>"><?php echo $sign; ?> ₹<?php echo format_inr($t['amount']); ?></span>
@@ -607,12 +603,11 @@ function category_icon($cat) {
                     <div class="input-shell">
                         <i class="fa-solid fa-tag" aria-hidden="true"></i>
                         <select id="txCategory">
-                            <option value="Food & Dining">Food & Dining</option>
-                            <option value="Housing & Utilities">Housing & Utilities</option>
-                            <option value="Shopping & Retail">Shopping & Retail</option>
-                            <option value="Transportation">Transportation</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Income">Income / Salary</option>
+                            <?php foreach ($category_names as $cn): if ($cn === 'Income') { ?>
+                                <option value="Income">Income / Salary</option>
+                            <?php continue; } ?>
+                                <option value="<?php echo htmlspecialchars($cn); ?>"><?php echo htmlspecialchars($cn); ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
@@ -683,8 +678,12 @@ function category_icon($cat) {
     window.APEX_TOKEN = <?php echo json_encode(csrf_token()); ?>;
 </script>
 <script>
+    window.APEX_CATEGORIES = <?php echo json_encode($apexCategories); ?>;
+</script>
+<script>
     const serverTransactions = <?php echo json_encode($transactions); ?>;
 </script>
+<script src="category-helper.js?v=<?php echo time(); ?>"></script>
 <script src="script.js?v=<?php echo time(); ?>"></script>
 <script src="app.js?v=<?php echo time(); ?>"></script>
 <script>

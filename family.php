@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once __DIR__ . '/includes/categories.php';
 
 if (!isset($_SESSION['user'])) {
     header('Location: login.php');
@@ -11,19 +12,6 @@ $initials = strtoupper(substr($user['name'], 0, 1));
 $activePage = 'family';
 $first_name = htmlspecialchars(explode(' ', $user['name'])[0]);
 
-function category_icon($cat) {
-    $map = [
-        'Food & Dining' => 'fa-utensils',
-        'Housing & Utilities' => 'fa-bolt',
-        'Shopping & Retail' => 'fa-bag-shopping',
-        'Transportation' => 'fa-car',
-        'Entertainment' => 'fa-film',
-        'Income' => 'fa-money-bill-wave',
-        'Health & Medical' => 'fa-briefcase-medical',
-    ];
-    return $map[$cat] ?? 'fa-receipt';
-}
-
 function format_inr($n) {
     return number_format((float)$n, 2, '.', ',');
 }
@@ -33,7 +21,10 @@ $family = null;
 $members = [];
 $shared = [];
 $pdo = getDBConnection();
+$apexCategories = [];
 if ($pdo) {
+    apex_load_category_registry($pdo, $user['id']);
+    $apexCategories = apex_get_categories($pdo, $user['id']);
     try {
         $st = $pdo->prepare("SELECT f.* FROM families f JOIN family_members m ON m.family_id = f.id WHERE m.user_id = ? AND m.status = 'active' ORDER BY m.joined_at DESC LIMIT 1");
         $st->execute([$user['id']]);
@@ -130,6 +121,10 @@ if ($pdo) {
                 <li><a href="budgets.php" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-bullseye nav-ic" aria-hidden="true"></i>
                     <span class="label">Budgets</span>
+                </a></li>
+                <li><a href="categories.php" class="<?php echo $activePage==='categories' ? 'is-active' : ''; ?>">
+                    <i class="fa-solid fa-tags nav-ic" aria-hidden="true"></i>
+                    <span class="label">Categories</span>
                 </a></li>
                 <li><a href="family.php" class="<?php echo $activePage==='family' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-users nav-ic" aria-hidden="true"></i>
@@ -312,7 +307,7 @@ if ($pdo) {
                     <div class="led-grid shared">
                         <span class="when"><span class="day"><?php echo date('d M', strtotime($t['date'])); ?></span><?php echo date('H:i', strtotime($t['date'])); ?></span>
                         <span class="col-merch"><strong><?php echo htmlspecialchars($t['title']); ?></strong><?php echo htmlspecialchars($t['member_name']); ?> · <?php echo htmlspecialchars($t['note'] ?? ''); ?></span>
-                        <span class="cat"><i class="fa-solid <?php echo category_icon($t['category']); ?>" aria-hidden="true"></i> <?php echo htmlspecialchars($t['category']); ?></span>
+                        <span class="cat"><i class="fa-solid <?php echo apex_category_icon($t['category']); ?>" aria-hidden="true"></i> <?php echo htmlspecialchars($t['category']); ?></span>
                         <span class="method"><?php echo htmlspecialchars($t['method'] ?? '—'); ?></span>
                         <span class="amount-wrap"><span class="<?php echo $cls; ?>"><?php echo $sign; ?> ₹<?php echo format_inr($t['amount']); ?></span></span>
                     </div>
@@ -592,6 +587,7 @@ if ($pdo) {
 <div id="toastContainer" class="toast-stack" aria-live="polite"></div>
 <script>
     window.APEX_TOKEN = <?php echo json_encode(csrf_token()); ?>;
+    window.APEX_CATEGORIES = <?php echo json_encode($apexCategories); ?>;
 </script>
 <?php if ($family):
     $myRole = 'member';
@@ -615,6 +611,7 @@ if ($pdo) {
     const serverTransactions = <?php echo json_encode($shared); ?>;
 </script>
 <?php endif; ?>
+<script src="category-helper.js?v=<?php echo time(); ?>"></script>
 <script src="script.js?v=<?php echo time(); ?>"></script>
 <?php if ($family): ?>
 <script src="app.js?v=<?php echo time(); ?>"></script>

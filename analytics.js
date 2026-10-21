@@ -31,17 +31,9 @@
         return grouped + ',' + last3 + '.' + decPart;
     }
     function categoryIcon(cat) {
-        const map = {
-            'Food & Dining': 'fa-utensils',
-            'Housing & Utilities': 'fa-bolt',
-            'Shopping & Retail': 'fa-bag-shopping',
-            'Transportation': 'fa-car',
-            'Entertainment': 'fa-film',
-            'Income': 'fa-money-bill-wave',
-            'Health & Wellness': 'fa-heart-pulse',
-            'Health & Medical': 'fa-briefcase-medical'
-        };
-        return map[cat] || 'fa-tag';
+        // Delegates to the single source of truth (category-helper.js).
+        if (window.ApexCategories) return window.ApexCategories.icon(cat);
+        return 'fa-tag';
     }
     function escapeHtml(s) {
         return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -324,10 +316,11 @@
         const el = document.getElementById('outflowsByCategoryChart');
         if (!el || typeof Chart === 'undefined') return;
 
-        // Colour palette — same look as the dashboard doughnut legend
-        const palette = ['#f5f5f5', '#f59e0b', '#a855f7', '#4ade80', '#8a8a8a', '#2a2a2a', '#3b82f6', '#ec4899'];
         const labels = DATA.byCategory.map((c) => c.name);
         const totals = DATA.byCategory.map((c) => c.total);
+        // Per-category stored color from the categories table — custom
+        // categories get exactly the color the user chose.
+        const colors = labels.map((n) => (window.ApexCategories ? window.ApexCategories.color(n) : '#f59e0b'));
 
         const cTotal = totals.reduce((a, b) => a + b, 0);
         setChartEmptyState('outflowsByCategoryChart', cTotal === 0, 'No expenses to categorize.');
@@ -343,7 +336,7 @@
                 labels: labels,
                 datasets: [{
                     data: totals,
-                    backgroundColor: labels.map((_, i) => palette[i % palette.length]),
+                    backgroundColor: colors,
                     borderColor: '#0a0a0a',
                     borderWidth: 2,
                     hoverOffset: 6
@@ -376,7 +369,7 @@
                 row.className = 'item';
                 const share = cTotal > 0 ? (totals[i] / cTotal * 100) : 0;
                 row.innerHTML = `
-                    <span class="swatch" style="background:${palette[i % palette.length]}"></span>
+                    <span class="swatch" style="background:${colors[i]}"></span>
                     <span class="label">${escapeHtml(name)}</span>
                     <span class="share">${share.toFixed(1)}%</span>
                 `;

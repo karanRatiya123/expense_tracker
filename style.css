@@ -3084,6 +3084,199 @@ input, select, textarea {
     color: var(--muted-text);
 }
 
+/* ============================================================
+   Custom Categories — § 06 (management page + inline quick-add)
+   ============================================================ */
+
+/* --- Grid of category cards --- */
+.cat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.cat-card {
+    padding: 26px 26px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--paper-card);
+    border-right: var(--hairline);
+    border-bottom: var(--hairline);
+}
+
+.cat-card:nth-child(3n) { border-right: 0; }
+
+@media (max-width: 1100px) {
+    .cat-grid { grid-template-columns: repeat(2, 1fr); }
+    .cat-card:nth-child(3n) { border-right: var(--hairline); }
+    .cat-card:nth-child(2n) { border-right: 0; }
+}
+
+@media (max-width: 700px) {
+    .cat-grid { grid-template-columns: 1fr; }
+    .cat-card { border-right: 0; }
+}
+
+.cat-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.cat-tile {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.92);
+    border-radius: 10px;
+    flex: 0 0 auto;
+}
+
+.cat-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--whisper);
+    border: var(--hairline);
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+.cat-badge.locked { color: var(--tangerine); }
+
+.cat-name {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    color: var(--ink);
+}
+
+.cat-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--whisper);
+}
+
+.cat-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* --- Empty state --- */
+.cat-empty {
+    padding: 70px 24px;
+    border-top: var(--hairline);
+    border-bottom: var(--hairline);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.cat-empty p {
+    color: var(--muted-text);
+    font-size: 14px;
+}
+
+/* --- Modal: icon picker + swatches --- */
+.cat-iconpick {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    border: var(--hairline);
+    max-height: 208px;
+    overflow-y: auto;
+}
+
+.cat-ic-opt {
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: var(--muted-text);
+    border-right: var(--hairline);
+    border-bottom: var(--hairline);
+    background: transparent;
+    cursor: pointer;
+}
+
+.cat-ic-opt:hover { color: var(--tangerine); }
+
+.cat-ic-opt.is-on {
+    background: var(--tangerine-soft);
+    color: var(--tangerine);
+    box-shadow: inset 0 0 0 1px var(--tangerine);
+}
+
+.cat-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px;
+    border: var(--hairline);
+}
+
+.cat-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+
+.cat-swatch:hover { transform: scale(1.12); }
+
+.cat-swatch.is-on {
+    border-color: var(--paper);
+    outline: 2px solid var(--tangerine);
+    outline-offset: 1px;
+}
+
+.cat-hint {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--whisper);
+    display: block;
+}
+
+/* --- Inline "+" next to category selects (Ledger/Budget modals) --- */
+.inline-add {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    margin-left: 2px;
+    font-size: 12px;
+    color: var(--muted-text);
+    background: transparent;
+    border: var(--hairline);
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.inline-add:hover {
+    color: var(--tangerine);
+    border-color: var(--tangerine);
+    background: var(--tangerine-soft);
+}
+
 .fam-modal-code-row {
     display: flex;
     align-items: center;

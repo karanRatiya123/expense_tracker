@@ -31,17 +31,9 @@
   }
 
   function categoryIcon(cat) {
-    const map = {
-      'Food & Dining': 'fa-utensils',
-      'Housing & Utilities': 'fa-bolt',
-      'Shopping & Retail': 'fa-bag-shopping',
-      'Transportation': 'fa-car',
-      'Entertainment': 'fa-film',
-      'Income': 'fa-money-bill-wave',
-      'Health & Wellness': 'fa-heart-pulse',
-      'Health & Medical': 'fa-briefcase-medical'
-    };
-    return map[cat] || 'fa-tag';
+    // Delegates to the single source of truth (category-helper.js).
+    if (window.ApexCategories) return window.ApexCategories.icon(cat);
+    return 'fa-tag';
   }
 
   function escapeHtml(s) {
@@ -429,8 +421,15 @@
   function populateCategorySelect() {
     const sel = document.getElementById('bCategory');
     if (!sel) return;
-    const cats = Object.keys(DATA.categories || {});
-    sel.innerHTML = cats.map((c) => '<option value="' + c + '">' + c + '</option>').join('');
+    // Live list from the categories table, kept current even mid-session.
+    if (window.ApexCategories) {
+      window.ApexCategories.get(true).then(() => {
+        window.ApexCategories.populateSelect(sel, {});
+      });
+    } else {
+      const cats = Object.keys(DATA.categories || {});
+      sel.innerHTML = cats.map((c) => '<option value="' + c + '">' + c + '</option>').join('');
+    }
   }
 
   window.openBudgetModal = function (id) {

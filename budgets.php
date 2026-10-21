@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once __DIR__ . '/includes/categories.php';
 
 if (!isset($_SESSION['user'])) {
     header('Location: login.php');
@@ -19,6 +20,16 @@ $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY dat
 $stmt->execute([$user['id']]);
 $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Categories from the DB (auto-migrates + seeds) — feeds payload + modals.
+apex_load_category_registry($pdo, $user['id']);
+$apexCategories = apex_get_categories($pdo, $user['id']);
+$catIconMap = [];
+$catColorMap = [];
+foreach ($apexCategories as $c) {
+    $catIconMap[$c['name']] = $c['icon'];
+    $catColorMap[$c['name']] = $c['color'];
+}
+
 // =========================================================================
 // Build JSON payload for budgets.js
 // =========================================================================
@@ -31,15 +42,8 @@ $payload = [
         'amount'   => (float)$t['amount'],
         'date'     => $t['date'],
     ], $transactions),
-    'categories' => [
-        'Food & Dining'       => 'fa-utensils',
-        'Housing & Utilities' => 'fa-bolt',
-        'Shopping & Retail'   => 'fa-bag-shopping',
-        'Transportation'      => 'fa-car',
-        'Entertainment'       => 'fa-film',
-        'Income'              => 'fa-money-bill-wave',
-        'Health & Medical'    => 'fa-briefcase-medical',
-    ],
+    'categories' => $catIconMap,
+    'categoryColors' => $catColorMap,
     'demoDate' => date('Y-m-d'),
 ];
 
@@ -97,6 +101,10 @@ $jsonPayload = json_encode(
                 <li><a href="budgets.php" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-bullseye nav-ic" aria-hidden="true"></i>
                     <span class="label">Budgets</span>
+                </a></li>
+                <li><a href="categories.php" class="<?php echo $activePage==='categories' ? 'is-active' : ''; ?>">
+                    <i class="fa-solid fa-tags nav-ic" aria-hidden="true"></i>
+                    <span class="label">Categories</span>
                 </a></li>
                 <li><a href="family.php" class="<?php echo $activePage==='family' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-users nav-ic" aria-hidden="true"></i>
@@ -261,6 +269,7 @@ $jsonPayload = json_encode(
                     <select id="bCategory" required>
                         <!-- populated by JS -->
                     </select>
+                    <button type="button" class="inline-add" onclick="openQuickCat('bCategory')" title="Add new category" aria-label="Add new category"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
                 </div>
             </div>
 
@@ -333,11 +342,14 @@ $jsonPayload = json_encode(
 <script id="budgetsData" type="application/json"><?php echo $jsonPayload; ?></script>
 <script>
     window.APEX_TOKEN = <?php echo json_encode(csrf_token()); ?>;
+    window.APEX_CATEGORIES = <?php echo json_encode($apexCategories); ?>;
 </script>
 <script>
     const serverTransactions = <?php echo json_encode($transactions); ?>;
 </script>
+<script src="category-helper.js?v=<?php echo time(); ?>"></script>
 <script src="script.js?v=<?php echo time(); ?>"></script>
+<script src="quickadd.js?v=<?php echo time(); ?>"></script>
 <script src="budgets.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

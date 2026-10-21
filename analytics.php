@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once __DIR__ . '/includes/categories.php';
 
 if (!isset($_SESSION['user'])) {
     header('Location: login.php');
@@ -260,19 +261,9 @@ $payload = [
 
 $jsonPayload = json_encode($payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
 
-// Helper for ISO render in PHP-side empty-state
-function cat_icon($cat) {
-    $map = [
-        'Food & Dining' => 'fa-utensils',
-        'Housing & Utilities' => 'fa-bolt',
-        'Shopping & Retail' => 'fa-bag-shopping',
-        'Transportation' => 'fa-car',
-        'Entertainment' => 'fa-film',
-        'Income' => 'fa-money-bill-wave',
-        'Health & Medical' => 'fa-briefcase-medical',
-    ];
-    return $map[$cat] ?? 'fa-tag';
-}
+// Shared helper for ISO render in PHP-side markup (DB-backed registry)
+apex_load_category_registry($pdo, $user['id']);
+$apexCategories = apex_get_categories($pdo, $user['id']);
 
 // Day-of-week row helper for the static markup
 $dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -326,6 +317,10 @@ $dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
                 <li><a href="budgets.php" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-bullseye nav-ic" aria-hidden="true"></i>
                     <span class="label">Budgets</span>
+                </a></li>
+                <li><a href="categories.php" class="<?php echo $activePage==='categories' ? 'is-active' : ''; ?>">
+                    <i class="fa-solid fa-tags nav-ic" aria-hidden="true"></i>
+                    <span class="label">Categories</span>
                 </a></li>
                 <li><a href="family.php" class="<?php echo $activePage==='family' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-users nav-ic" aria-hidden="true"></i>
@@ -595,7 +590,7 @@ $dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
                 ?>
                     <div class="merchant-row">
                         <span class="rank"><?php echo str_pad($i, 2, '0', STR_PAD_LEFT); ?></span>
-                        <span class="micon"><i class="fa-solid <?php echo cat_icon($mInfo['category']); ?>" style="color:var(--tangerine);" aria-hidden="true"></i></span>
+                        <span class="micon"><i class="fa-solid <?php echo apex_category_icon($mInfo['category']); ?>" style="color:var(--tangerine);" aria-hidden="true"></i></span>
                         <div class="mname">
                             <strong><?php echo htmlspecialchars($mTitle); ?></strong>
                             <span class="muted"><?php echo (int)$mInfo['count']; ?> <?php echo $mInfo['count']==1?'entry':'entries'; ?> · <?php echo htmlspecialchars($mInfo['category']); ?></span>
@@ -703,8 +698,12 @@ $dowLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 <!-- Expose data for Chart.js -->
 <script>
+    window.APEX_CATEGORIES = <?php echo json_encode($apexCategories); ?>;
+</script>
+<script>
     const serverTransactions = <?php echo json_encode($transactions); ?>;
 </script>
+<script src="category-helper.js?v=<?php echo time(); ?>"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="analytics.js?v=<?php echo time(); ?>"></script>
 </body>

@@ -140,16 +140,9 @@ async function handleUpdateGoals(e) {
 }
 
 function categoryIcon(cat) {
-    const map = {
-        'Food & Dining': 'fa-utensils',
-        'Housing & Utilities': 'fa-bolt',
-        'Shopping & Retail': 'fa-bag-shopping',
-        'Transportation': 'fa-car',
-        'Entertainment': 'fa-film',
-        'Income': 'fa-money-bill-wave',
-        'Health & Wellness': 'fa-heart-pulse'
-    };
-    return map[cat] || 'fa-tag';
+    // Delegates to the single source of truth (category-helper.js).
+    if (window.ApexCategories) return window.ApexCategories.icon(cat);
+    return 'fa-tag';
 }
 
 function escapeHtml(s) {
@@ -476,19 +469,42 @@ function updateHeatmapDay(dateObj, addedAmount) {
 // ----- Charts Initialization -----
 
 function getCategoryData() {
-    let cats = { 'Food & Dining': 0, 'Housing & Utilities': 0, 'Shopping & Retail': 0, 'Transportation': 0, 'Entertainment': 0, 'Other': 0 };
+    // Live category set: the user's expense categories (built-ins first), plus
+    // any distinct expense category found in transactions that isn't in the list.
+    const order = (window.ApexCategories ? window.ApexCategories.names(true) : []);
+    const live = [];
     if (typeof serverTransactions !== 'undefined' && Array.isArray(serverTransactions)) {
-        serverTransactions.forEach(t => {
-            if (t.type === 'expense') {
-                let cat = t.category;
-                if (cats[cat] !== undefined) cats[cat] += parseFloat(t.amount);
-                else if (cat === 'Shopping') cats['Shopping & Retail'] += parseFloat(t.amount);
-                else if (cat === 'Transport') cats['Transportation'] += parseFloat(t.amount);
-                else cats['Other'] += parseFloat(t.amount);
+        serverTransactions.forEach((t) => {
+            if (t.type === 'expense' && t.category && !order.includes(t.category) && !live.includes(t.category)) {
+                live.push(t.category);
             }
         });
     }
-    return [cats['Food & Dining'], cats['Housing & Utilities'], cats['Shopping & Retail'], cats['Transportation'], cats['Entertainment'], cats['Other']];
+    let cats = order.concat(live);
+    if (!cats.length) cats = ['Food & Dining', 'Housing & Utilities', 'Shopping & Retail', 'Transportation', 'Entertainment', 'Other'];
+
+    const totals = cats.map(() => 0);
+    let otherTotal = 0;
+
+    if (typeof serverTransactions !== 'undefined' && Array.isArray(serverTransactions)) {
+        serverTransactions.forEach((t) => {
+            if (t.type !== 'expense') return;
+            const idx = cats.indexOf(t.category);
+            if (idx === -1) otherTotal += parseFloat(t.amount);
+            else totals[idx] += parseFloat(t.amount);
+        });
+    }
+
+    if (otherTotal > 0) {
+        cats.push('Other');
+        totals.push(otherTotal);
+    }
+    return { labels: cats, totals: totals };
+}
+
+function categoryColor(name) {
+    if (window.ApexCategories) return window.ApexCategories.color(name);
+    return '#f59e0b';
 }
 
 function getMonthlyData() {
@@ -668,7 +684,9 @@ function initCharts() {
 
     const donutCtx = document.getElementById('categoryChart');
     if (donutCtx) {
-        const cData = getCategoryData();
+        const cd = getCategoryData();
+        const cData = cd.totals;
+        const cLabels = cd.labels;
         const cTotal = cData.reduce((a, b) => a + b, 0);
         setChartEmptyState('categoryChart', cTotal === 0, 'No expense data to categorize.');
 
@@ -676,17 +694,10 @@ function initCharts() {
             new Chart(donutCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Food & Dining', 'Housing & Utilities', 'Shopping', 'Transport', 'Entertainment', 'Other'],
+                    labels: cLabels,
                     datasets: [{
                         data: cData,
-                    backgroundColor: [
-                        '#f5f5f5',
-                        '#f59e0b',
-                        '#a855f7',
-                        '#4ade80',
-                        '#8a8a8a',
-                        '#2a2a2a'
-                    ],
+                    backgroundColor: cLabels.map((n) => categoryColor(n)),
                     borderColor: '#0a0a0a',
                     borderWidth: 2,
                     hoverOffset: 6
@@ -715,12 +726,10 @@ function initCharts() {
         const legend = document.getElementById('categoryLegend');
         if (legend) {
             legend.innerHTML = '';
-            const cats = ['Food & Dining', 'Housing & Utilities', 'Shopping', 'Transport', 'Entertainment', 'Other'];
-            const cols = ['#f5f5f5', '#f59e0b', '#a855f7', '#4ade80', '#8a8a8a', '#2a2a2a'];
-            cats.forEach((c, i) => {
+            cLabels.forEach((c, i) => {
                 const item = document.createElement('span');
                 item.className = 'item';
-                item.innerHTML = `<span class="swatch" style="background:${cols[i]}"></span>${c}`;
+                item.innerHTML = `<span class="swatch" style="background:${categoryColor(c)}"></span>${escapeHtml(c)}`;
                 legend.appendChild(item);
             });
         }

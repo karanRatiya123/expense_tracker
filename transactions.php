@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once __DIR__ . '/includes/categories.php';
 
 if (!isset($_SESSION['user'])) {
     header('Location: login.php');
@@ -24,18 +25,6 @@ function format_time($iso) {
     if (!$ts) return '';
     return date('H:i', $ts);
 }
-function category_icon($cat) {
-    $map = [
-        'Food & Dining' => 'fa-utensils',
-        'Housing & Utilities' => 'fa-bolt',
-        'Shopping & Retail' => 'fa-bag-shopping',
-        'Transportation' => 'fa-car',
-        'Entertainment' => 'fa-film',
-        'Income' => 'fa-money-bill-wave',
-        'Health & Medical' => 'fa-briefcase-medical',
-    ];
-    return $map[$cat] ?? 'fa-receipt';
-}
 
 $pdo = getDBConnection();
 $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC");
@@ -52,22 +41,17 @@ foreach ($transactions as $t) {
 }
 $net = $total_in - $total_out;
 
-// Unique categories for filter chips and edit form
-$standardCategories = [
-    'Food & Dining',
-    'Housing & Utilities',
-    'Shopping & Retail',
-    'Transportation',
-    'Entertainment',
-    'Health & Medical',
-    'Income',
-];
-$categories = [];
+// Categories from the DB (auto-migrates + seeds), merged with any name
+// already present in existing transactions so old rows never vanish.
+apex_load_category_registry($pdo, $user['id']);
+$apexCategories = apex_get_categories($pdo, $user['id']);
+$categoryCount = count($apexCategories);
+$categories = array_column($apexCategories, 'name');
 foreach ($transactions as $t) {
-    $categories[$t['category']] = true;
+    if (!in_array($t['category'], $categories, true)) {
+        $categories[] = $t['category'];
+    }
 }
-$categoryCount = count($categories);
-$categories = array_values(array_unique(array_merge($standardCategories, array_keys($categories))));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -119,6 +103,10 @@ $categories = array_values(array_unique(array_merge($standardCategories, array_k
                 <li><a href="budgets.php" class="<?php echo $activePage==='budgets' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-bullseye nav-ic" aria-hidden="true"></i>
                     <span class="label">Budgets</span>
+                </a></li>
+                <li><a href="categories.php" class="<?php echo $activePage==='categories' ? 'is-active' : ''; ?>">
+                    <i class="fa-solid fa-tags nav-ic" aria-hidden="true"></i>
+                    <span class="label">Categories</span>
                 </a></li>
                 <li><a href="family.php" class="<?php echo $activePage==='family' ? 'is-active' : ''; ?>">
                     <i class="fa-solid fa-users nav-ic" aria-hidden="true"></i>
@@ -263,7 +251,7 @@ $categories = array_values(array_unique(array_merge($standardCategories, array_k
                             <?php echo htmlspecialchars($t['note']); ?>
                         </span>
                         <span class="cat">
-                            <i class="fa-solid <?php echo category_icon($t['category']); ?>" aria-hidden="true"></i>
+                            <i class="fa-solid <?php echo apex_category_icon($t['category']); ?>" aria-hidden="true"></i>
                             <?php echo htmlspecialchars($t['category']); ?>
                         </span>
                         <span class="method"><?php echo htmlspecialchars($t['method']); ?></span>
@@ -345,6 +333,7 @@ $categories = array_values(array_unique(array_merge($standardCategories, array_k
                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <button type="button" class="inline-add" onclick="openQuickCat('addTxCategory')" title="Add new category" aria-label="Add new category"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
                     </div>
                 </div>
             </div>
@@ -429,6 +418,7 @@ $categories = array_values(array_unique(array_merge($standardCategories, array_k
                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <button type="button" class="inline-add" onclick="openQuickCat('editTxCategory')" title="Add new category" aria-label="Add new category"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
                     </div>
                 </div>
             </div>
@@ -464,9 +454,14 @@ $categories = array_values(array_unique(array_merge($standardCategories, array_k
     window.APEX_TOKEN = <?php echo json_encode(csrf_token()); ?>;
 </script>
 <script>
+    window.APEX_CATEGORIES = <?php echo json_encode($apexCategories); ?>;
+</script>
+<script>
     const serverTransactions = <?php echo json_encode($transactions); ?>;
 </script>
+<script src="category-helper.js?v=<?php echo time(); ?>"></script>
 <script src="script.js?v=<?php echo time(); ?>"></script>
+<script src="quickadd.js?v=<?php echo time(); ?>"></script>
 <script src="transactions.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

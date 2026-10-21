@@ -68,6 +68,39 @@ CREATE TABLE IF NOT EXISTS family_members (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- ============================================================
+--  categories — user-defined categories, added later, additive
+--  only. transactions.category stays VARCHAR(100); built-in
+--  seeds match today's names exactly, so no backfill is needed.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS categories (
+    id VARCHAR(50) PRIMARY KEY,
+    user_id INT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    icon VARCHAR(60) NOT NULL DEFAULT 'fa-tag',
+    color VARCHAR(9) NOT NULL DEFAULT '#f59e0b',
+    is_builtin TINYINT(1) NOT NULL DEFAULT 0,
+    position INT NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_user_category (user_id, name),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+INSERT IGNORE INTO categories (id, user_id, name, icon, color, is_builtin, position)
+SELECT 'cat_seed_food',    u.id, 'Food & Dining',       'fa-utensils',          '#f59e0b', 1, 1 FROM users u ORDER BY u.id LIMIT 1;
+INSERT IGNORE INTO categories (id, user_id, name, icon, color, is_builtin, position)
+SELECT 'cat_seed_house',   u.id, 'Housing & Utilities', 'fa-bolt',              '#3b82f6', 1, 2 FROM users u ORDER BY u.id LIMIT 1;
+INSERT IGNORE INTO categories (id, user_id, name, icon, color, is_builtin, position)
+SELECT 'cat_seed_shop',    u.id, 'Shopping & Retail',   'fa-bag-shopping',      '#a855f7', 1, 3 FROM users u ORDER BY u.id LIMIT 1;
+INSERT IGNORE INTO categories (id, user_id, name, icon, color, is_builtin, position)
+SELECT 'cat_seed_trans',   u.id, 'Transportation',      'fa-car',               '#4ade80', 1, 4 FROM users u ORDER BY u.id LIMIT 1;
+INSERT IGNORE INTO categories (id, user_id, name, icon, color, is_builtin, position)
+SELECT 'cat_seed_ent',     u.id, 'Entertainment',       'fa-film',              '#ec4899', 1, 5 FROM users u ORDER BY u.id LIMIT 1;
+INSERT IGNORE INTO categories (id, user_id, name, icon, color, is_builtin, position)
+SELECT 'cat_seed_health',  u.id, 'Health & Medical',    'fa-briefcase-medical', '#22d3ee', 1, 6 FROM users u ORDER BY u.id LIMIT 1;
+INSERT IGNORE INTO categories (id, user_id, name, icon, color, is_builtin, position)
+SELECT 'cat_seed_income',  u.id, 'Income',              'fa-money-bill-wave',   '#8a8a8a', 1, 7 FROM users u ORDER BY u.id LIMIT 1;
+
 -- Insert demo user
 INSERT IGNORE INTO users (id, name, email, password, created_at) VALUES 
 (1, 'Alex Morgan', 'demo@apexspend.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '2026-07-28 10:00:00');

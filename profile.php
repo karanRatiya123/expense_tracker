@@ -193,6 +193,7 @@ $flashSuccess = getFlashMessage('success');
                 <li><a href="transactions.php" class="<?= $activePage==='ledger' ? 'is-active' : '' ?>"><i class="fa-solid fa-receipt nav-ic"></i><span class="label">Ledger</span></a></li>
                 <li><a href="analytics.php" class="<?= $activePage==='analytics' ? 'is-active' : '' ?>"><i class="fa-solid fa-chart-pie nav-ic"></i><span class="label">Analytics</span></a></li>
                 <li><a href="budgets.php" class="<?= $activePage==='budgets' ? 'is-active' : '' ?>"><i class="fa-solid fa-bullseye nav-ic"></i><span class="label">Budgets</span></a></li>
+                <li><a href="categories.php" class="<?= $activePage==='categories' ? 'is-active' : '' ?>"><i class="fa-solid fa-tags nav-ic"></i><span class="label">Categories</span></a></li>
                 <li><a href="family.php" class="<?= $activePage==='family' ? 'is-active' : '' ?>"><i class="fa-solid fa-users nav-ic"></i><span class="label">Family <span class="lock-tag" title="Locked"><i class="fa-solid fa-lock"></i></span></span></a></li>
                 <li><a href="profile.php" class="<?= $activePage==='profile' ? 'is-active' : '' ?>"><i class="fa-solid fa-user nav-ic"></i><span class="label">Profile</span></a></li>
             </ul>
