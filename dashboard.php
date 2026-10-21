@@ -609,6 +609,7 @@ $category_names = array_column($apexCategories, 'name');
                                 <option value="<?php echo htmlspecialchars($cn); ?>"><?php echo htmlspecialchars($cn); ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <button type="button" class="inline-add" onclick="openQuickCat('txCategory')" title="Add new category" aria-label="Add new category"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
                     </div>
                 </div>
             </div>
@@ -686,6 +687,7 @@ $category_names = array_column($apexCategories, 'name');
 <script src="category-helper.js?v=<?php echo time(); ?>"></script>
 <script src="script.js?v=<?php echo time(); ?>"></script>
 <script src="apex-select.js?v=<?php echo time(); ?>"></script>
+<script src="quickadd.js?v=<?php echo time(); ?>"></script>
 <script src="app.js?v=<?php echo time(); ?>"></script>
 <script>
 (function () {
