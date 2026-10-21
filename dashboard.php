@@ -685,6 +685,7 @@ $category_names = array_column($apexCategories, 'name');
 </script>
 <script src="category-helper.js?v=<?php echo time(); ?>"></script>
 <script src="script.js?v=<?php echo time(); ?>"></script>
+<script src="apex-select.js?v=<?php echo time(); ?>"></script>
 <script src="app.js?v=<?php echo time(); ?>"></script>
 <script>
 (function () {

@@ -3291,6 +3291,161 @@ html[data-theme="light"] .input-shell select option {
     background: var(--tangerine-soft);
 }
 
+/* ============================================================
+   Custom category select — shadcn-style dropdown (apex-select.js)
+   ============================================================ */
+.apx-select-shell {
+    position: relative;
+}
+
+/* Native control stays in the DOM but invisible */
+.apx-native-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+}
+
+.apx-trigger {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+}
+
+.apx-trigger:focus-visible {
+    outline: 2px solid var(--tangerine);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.apx-trigger.apx-is-placeholder .apx-value { color: var(--whisper); }
+
+.apx-trig-ic { font-size: 14px; flex: 0 0 auto; }
+
+.apx-value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.apx-chev {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: var(--whisper);
+    transition: transform 0.18s ease, color 0.18s ease;
+}
+
+.apx-trigger.is-open .apx-chev {
+    transform: rotate(180deg);
+    color: var(--tangerine);
+}
+
+/* --- Floating panel --- */
+.apx-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    max-height: 288px;
+    overflow-y: auto;
+    padding: 5px;
+    background: var(--paper-card);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+    z-index: 80;
+}
+
+.apx-panel.apx-flip {
+    top: auto;
+    bottom: calc(100% + 8px);
+}
+
+.apx-panel.is-anim {
+    animation: apx-pop 0.14s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes apx-pop {
+    from { opacity: 0; transform: translateY(-5px) scale(0.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- Options --- */
+.apx-opt {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--muted-text);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+.apx-opt i:first-child {
+    width: 16px;
+    font-size: 13px;
+    flex: 0 0 auto;
+    text-align: center;
+}
+
+.apx-opt:hover,
+.apx-opt.is-focused {
+    background: rgba(255, 255, 255, 0.045);
+    color: var(--ink);
+}
+
+.apx-opt.is-selected {
+    color: var(--ink);
+    font-weight: 500;
+}
+
+html[data-theme="light"] .apx-opt:hover,
+html[data-theme="light"] .apx-opt.is-focused {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.apx-opt-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.apx-check {
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: var(--tangerine);
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.apx-opt.is-selected .apx-check {
+    opacity: 1;
+    transform: scale(1);
+}
+
 .fam-modal-code-row {
     display: flex;
     align-items: center;

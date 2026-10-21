@@ -461,6 +461,7 @@ foreach ($transactions as $t) {
 </script>
 <script src="category-helper.js?v=<?php echo time(); ?>"></script>
 <script src="script.js?v=<?php echo time(); ?>"></script>
+<script src="apex-select.js?v=<?php echo time(); ?>"></script>
 <script src="quickadd.js?v=<?php echo time(); ?>"></script>
 <script src="transactions.js?v=<?php echo time(); ?>"></script>
 </body>

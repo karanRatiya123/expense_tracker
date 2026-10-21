@@ -349,6 +349,7 @@ $jsonPayload = json_encode(
 </script>
 <script src="category-helper.js?v=<?php echo time(); ?>"></script>
 <script src="script.js?v=<?php echo time(); ?>"></script>
+<script src="apex-select.js?v=<?php echo time(); ?>"></script>
 <script src="quickadd.js?v=<?php echo time(); ?>"></script>
 <script src="budgets.js?v=<?php echo time(); ?>"></script>
 </body>
