@@ -3405,7 +3405,13 @@ html[data-theme="light"] .input-shell select option {
     width: 16px;
     font-size: 13px;
     flex: 0 0 auto;
+    color: var(--muted-text);
     text-align: center;
+}
+
+.apx-ic-spacer {
+    width: 16px;
+    flex: 0 0 auto;
 }
 
 .apx-opt:hover,

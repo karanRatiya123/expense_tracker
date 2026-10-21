@@ -25,6 +25,32 @@
         return window.ApexCategories ? window.ApexCategories.color(name) : '#f59e0b';
     }
 
+    /**
+     * Icon per option, by field type:
+     *   - category selects → stored category icon + color
+     *   - payment/method selects → a neutral payment-kind icon
+     *   - others → option data-icon if provided, else none
+     */
+    function optionIcon(select, value, extraCls) {
+        const x = extraCls ? ' ' + extraCls : '';
+        if (/category$/i.test(select.id)) {
+            return { html: `<i class="fa-solid ${esc(catIcon(value))}${x}" style="color:${esc(catColor(value))}" aria-hidden="true"></i>` };
+        }
+        const opt = select.querySelector('option[value="' + (window.CSS && CSS.escape ? CSS.escape(value) : value) + '"]');
+        if (opt && opt.dataset.icon) {
+            return { html: `<i class="fa-solid ${esc(opt.dataset.icon)}${x}" aria-hidden="true"></i>` };
+        }
+        const v = String(value).toLowerCase();
+        let cls = '';
+        if (v.includes('upi')) cls = 'fa-solid fa-mobile-screen';
+        else if (v.includes('cash')) cls = 'fa-solid fa-money-bill-wave';
+        else if (v.includes('card') || v.includes('rupay') || v.includes('visa') || v.includes('master')) cls = 'fa-solid fa-credit-card';
+        else if (v.includes('neft') || v.includes('imps') || v.includes('bank') || v.includes('transfer')) cls = 'fa-solid fa-building-columns';
+        else if (v.includes('wallet')) cls = 'fa-solid fa-wallet';
+        else if (v.includes('cheque') || v.includes('check')) cls = 'fa-solid fa-receipt';
+        return cls ? { html: `<i class="${cls}${x}" aria-hidden="true"></i>` } : { html: '<span class="apx-ic-spacer" aria-hidden="true"></span>' };
+    }
+
     function mount(select) {
         if (select.dataset.apexSelect) return;
         const shell = select.closest('.input-shell');
@@ -60,8 +86,9 @@
         function renderTrigger() {
             const v = selectedValue();
             const opt = opts().find((o) => o.value === v);
+            const ic = opt ? optionIcon(select, opt.value, 'apx-trig-ic') : null;
             trigger.innerHTML = ''
-                + (opt ? `<i class="fa-solid ${esc(catIcon(opt.value))} apx-trig-ic" style="color:${esc(catColor(opt.value))}" aria-hidden="true"></i>` : '')
+                + (ic ? ic.html : '')
                 + `<span class="apx-value">${esc(opt ? opt.textContent : 'Select…')}</span>`
                 + `<i class="fa-solid fa-chevron-down apx-chev" aria-hidden="true"></i>`;
             trigger.classList.toggle('apx-is-placeholder', !opt);
@@ -71,7 +98,7 @@
             const v = selectedValue();
             panel.innerHTML = opts().map((o, i) => ''
                 + `<div class="apx-opt${o.value === v ? ' is-selected' : ''}" role="option" data-i="${i}" tabindex="-1">`
-                +   `<i class="fa-solid ${esc(catIcon(o.value))}" style="color:${esc(catColor(o.value))}" aria-hidden="true"></i>`
+                +   optionIcon(select, o.value).html
                 +   `<span class="apx-opt-label">${esc(o.textContent)}</span>`
                 +   `<i class="fa-solid fa-check apx-check" aria-hidden="true"></i>`
                 + `</div>`
@@ -80,7 +107,7 @@
 
         function syncLabel() {
             const cur = (select.selectedIndex >= 0 && select.options[select.selectedIndex]) ? select.options[select.selectedIndex].textContent : 'none';
-            trigger.setAttribute('aria-label', 'Category: ' + cur);
+            trigger.setAttribute('aria-label', (select.labels && select.labels[0] ? select.labels[0].textContent : 'Option') + ': ' + cur);
         }
 
         function setFocus(i, scroll) {

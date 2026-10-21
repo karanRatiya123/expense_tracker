@@ -618,7 +618,7 @@ $category_names = array_column($apexCategories, 'name');
                 <div class="field-row"><label for="txMethod">Payment method</label></div>
                 <div class="input-shell">
                     <i class="fa-regular fa-credit-card" aria-hidden="true"></i>
-                    <select id="txMethod">
+                    <select id="txMethod" data-apex-select>
                         <option value="UPI ··4182">UPI ··4182</option>
                         <option value="RuPay ··2207">RuPay ··2207</option>
                         <option value="NEFT ··0019">NEFT ··0019</option>
